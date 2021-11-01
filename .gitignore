@@ -125,3 +125,4 @@ dmypy.json
 .pyre/
 /src/tests/temp/
 /rl-baselines3-zoo/
+/imitation/
