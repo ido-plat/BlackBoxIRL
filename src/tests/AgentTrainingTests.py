@@ -14,7 +14,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_agent_training_render(self):
         model_path = 'rl-baselines3-zoo/rl-trained-agents/a2c/LunarLander-v2_1/LunarLander-v2.zip'
-        from_file = True
+        from_file = False
         game = 'LunarLander-v2'
         gif_path = None  # put None to not save
         learning_time_stemp = int(1e6)

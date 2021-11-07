@@ -39,7 +39,7 @@ dependencies:
   - torchvision=0.10.0=py37_cu102
   - typing_extensions=3.10.0.0=pyh06a4308_0
   - vc=14.2=h21ff451_1
-  - vs2015_runtime=14.27.29016=h5e58377_2
+  - vs2015_runtime=14.27.29016=h5e58377_2d
   - wheel=0.36.2=pyhd3eb1b0_0
   - wincertstore=0.2=py37_0
   - xz=5.2.5=h62dcd97_0
@@ -74,7 +74,7 @@ dependencies:
     - matplotlib==3.4.2
 #    - mkl-random==1.0.4
     - multidict==5.1.0
-    - numpy==1.17.0
+    - numpy
     - oauthlib==3.1.1
     - opencv-python==4.5.3.56
     - packaging==21.0
@@ -86,7 +86,7 @@ dependencies:
     - pyasn1-modules==0.2.8
     - pydeprecate==0.3.1
     - pyglet==1.5.15
-    - pyparsing==2.4.7
+    - pyparsing==2.4.7cond
     - python-dateutil==2.8.2
     - pytorch-lightning==1.4.1
     - pytz==2021.1
