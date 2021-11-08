@@ -20,3 +20,4 @@ def airl(samples, venv):
         custom_logger=airl_logger,
     )
     airl_trainer.train(total_timesteps=2048)
+    return airl_trainer.reward_test()
