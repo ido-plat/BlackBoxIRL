@@ -38,7 +38,7 @@ def check_reward_distribution(agent, alg, venv, num_traj, plot_hist=False, norm=
     return real_reward, fake_reward
 
 
-def train_agent_learnt_reward(samples, venv, model_type, alg, learning_time_stemp, model_path, model_arg=None, alg_args=None):  # could need a lot more arguments
+def train_agent_learnt_reward(samples, venv, model_type, alg, learning_time_step, model_path=None, model_arg=None, alg_args=None):  # could need a lot more arguments
     if not alg_args:
         alg_args = {}
     if not model_arg:
@@ -49,8 +49,9 @@ def train_agent_learnt_reward(samples, venv, model_type, alg, learning_time_stem
         reward_fn=reward_func,
     )
     model = model_type(env=new_env, verbose=1, **model_arg)
-    model.learn(total_timesteps=learning_time_stemp)
-    model.save(model_path)
+    model.learn(total_timesteps=learning_time_step)
+    if model_path:
+        model.save(model_path)
     return model
 
 
