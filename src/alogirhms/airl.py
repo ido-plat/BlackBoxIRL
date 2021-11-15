@@ -29,13 +29,13 @@ def airl(samples, venv, policy_training_steps, total_timesteps, disc_updates=4, 
     return airl_trainer._reward_net.base.predict
 
 
-def load_reward_net(path):
-    net = th.load(path)
+def load_reward_net(path, device='cuda:0'):
+    net = th.load(path).to(device)
     return net.predict
 
 
-def load_disc(path):
-    net = th.load(path)
+def load_disc_func(path, device='cuda:0'):
+    net = th.load(path).to(device)
 
     def f(state, action, next_state, done, log_policy_act_prob):
         """Compute the discriminator's logits for each state-action sample."""
@@ -43,6 +43,7 @@ def load_disc(path):
             raise TypeError(
                 "Non-None `log_policy_act_prob` is required for this method.",
             )
-        reward_output_train = net(state, action, next_state, done)
-        return log_policy_act_prob - reward_output_train
+        with th.no_grad():
+            reward_output_train = net(state.float(), action.float(), next_state.float(), done.float())
+            return log_policy_act_prob - reward_output_train
     return f

@@ -1,7 +1,7 @@
 import numpy as np
 import torch as th
 import matplotlib.pyplot as plt
-
+from imitation.data.types import Transitions
 from imitation.data.rollout import generate_trajectories, flatten_trajectories_with_rew, make_min_timesteps
 from src.alogirhms.airl import airl
 from src.utils.imitation_connector import *
@@ -71,14 +71,21 @@ def compare_agents(agent1, agent2, venv, num_samples):
     return traj1.rews.mean() - traj2.rews.mean()
 
 
-def eval_single_traj(samples, venv, save_path, agent=None, discriminator=None, args_for_airl=None,
-                                    plot_confidence_hist=False):
-    # return confidance level (has to use airl)
-    if not agent:
-        agent = train_agent_learnt_reward(samples, venv)
+def traj_confidence(samples: Transitions, disc_func, agent, action_space_size):
+    discriminator = discriminator_conversion(disc_func, agent, action_space_size)
+    confidence = discriminator(samples.obs.astype(np.float), samples.acts.astype(np.float),
+                               samples.next_obs.astype(np.float), samples.dones.astype(np.float))
+    return confidence
+
+
+
+def eval_single_traj(venv, agent, action_space_size, save_path=None, samples=None, discriminator=None, args_for_airl=None,
+                     plot_confidence_hist=False):
     if not discriminator:
+        if not samples:
+            raise ValueError("Pass samples if there's no discriminator!!!")
         _, disc_func = airl(samples, venv, return_disc=True, **args_for_airl)
-        discriminator = im_disc_to_paper_disc(disc_func, agent)
+        discriminator = discriminator_conversion(disc_func, agent, action_space_size)
     past_obs, action, next_obs, dones, _ = generate_trajectory_footage(agent, venv, save_path)
     confidence = discriminator(past_obs, action, next_obs, dones)
     if plot_confidence_hist:
