@@ -44,7 +44,7 @@ class BenchMarkTest(unittest.TestCase):
         obs, act, next_obs, done, rewards = generate_trajectory_footage(agent, venv, None)
         pass
 
-    def test_fa0ke_agent_creation(self):
+    def test_fake_agent_creation(self):
         # create fake agent, disc
         # test agent with avg reward with benchmarking.compare_agents
         # save agent, disc
