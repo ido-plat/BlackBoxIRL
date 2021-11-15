@@ -61,19 +61,22 @@ def provide_footage_from_fake_agent(samples, venv, save_path, agent=None, discri
         _, disc_func = airl(samples, venv, return_disc=True, **args_for_airl)
 
         def f(states, actions, next_states, done) -> np.ndarray:
-            states = th.tensor(states)
-            actions = th.tensor(actions)
-            next_states = th.tensor(next_states)
-            done = th.tensor(done)
+            if isinstance(states, np.ndarray):
+                states = th.tensor(states)
+                actions = th.tensor(actions)
+                next_states = th.tensor(next_states)
+                done = th.tensor(done)
             _, log_prob, _ = agent.policy.evaluate_actions(states, actions)
             disc_result = disc_func(states, actions, next_states, done, log_prob)
-            return 1/(1 + th.exp(-disc_result)).numpy()
+            if isinstance(states, np.ndarray):
+                return 1/(1 + th.exp(-disc_result)).numpy()
+            return 1/(1 + th.exp(-disc_result))
         discriminator = f
     past_obs, action, next_obs, dones, _ = generate_trajectory_footage(agent, venv, save_path)
     confidence = discriminator(past_obs, action, next_obs, dones)
     if plot_confidence_hist:
         plt.hist(confidence)
+        print('confidence mean: '+str(confidence.mean()))
         plt.show()
-    print('confidence mean: '+str(confidence.mean()))
     return confidence, discriminator
 
