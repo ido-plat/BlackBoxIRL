@@ -6,7 +6,7 @@ from imitation.data.rollout import generate_trajectories, flatten_trajectories_w
 from src.alogirhms.airl import airl
 from stable_baselines3 import DQN, A2C, PPO
 from src.utils.agent_utils import generate_trajectory_footage
-
+from imitation.src.imitation.rewards.reward_wrapper import *
 
 def check_reward_distribution(agent, alg, venv, num_traj, plot_hist=False, norm=True, args=None, test_num_traj=0,
                               test_agent=None):
@@ -38,11 +38,20 @@ def check_reward_distribution(agent, alg, venv, num_traj, plot_hist=False, norm=
     return real_reward, fake_reward
 
 
-def train_agent_learnt_reward(samples, venv, model_type, alg, model_args=None):  # could need a lot more arguments
-    # reward_func = alg()
-    # build env with reward_func
-    # train agent on env
-    return PPO.load('temp')  # temp just to put the right return type
+def train_agent_learnt_reward(samples, venv, model_type, alg, learning_time_stemp, model_path, model_arg=None, alg_args=None):  # could need a lot more arguments
+    if not alg_args:
+        alg_args = {}
+    if not model_arg:
+        model_arg = {'policy': 'CnnPolicy'}
+    reward_func = alg(samples, venv, **alg_args)  # check airl arguments
+    new_env = RewardVecEnvWrapper(
+        venv=venv,
+        reward_fn=reward_func,
+    )
+    model = model_type(env=new_env, verbose=1, **model_arg)
+    model.learn(total_timesteps=learning_time_stemp)
+    model.save(model_path)
+    return model
 
 
 def compare_agents(agent1, agent2, venv, num_samples):
