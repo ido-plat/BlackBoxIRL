@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 
 from imitation.data.rollout import generate_trajectories, flatten_trajectories_with_rew, make_min_timesteps
 from src.alogirhms.airl import airl
+from src.utils.imitation_connector import *
 from stable_baselines3 import DQN, A2C, PPO
 from src.utils.agent_utils import generate_trajectory_footage
-from imitation.src.imitation.rewards.reward_wrapper import *
+from imitation.rewards.reward_wrapper import *
+
 
 def check_reward_distribution(agent, alg, venv, num_traj, plot_hist=False, norm=True, args=None, test_num_traj=0,
                               test_agent=None):
@@ -38,12 +40,17 @@ def check_reward_distribution(agent, alg, venv, num_traj, plot_hist=False, norm=
     return real_reward, fake_reward
 
 
-def train_agent_learnt_reward(samples, venv, model_type, alg, learning_time_step, model_path=None, model_arg=None, alg_args=None):  # could need a lot more arguments
-    if not alg_args:
-        alg_args = {}
+def train_agent_learnt_reward(samples, venv, model_type, learning_time_step, model_path=None, model_arg=None,
+                              airl_args=None, return_disc=False):  # could need a lot more arguments
+    if not airl_args:
+        airl_args = {}
     if not model_arg:
         model_arg = {'policy': 'CnnPolicy'}
-    reward_func = alg(samples, venv, **alg_args)  # check airl arguments
+    disc = None
+    if return_disc:
+        reward_func, disc = airl(samples, venv, return_disc=True, **airl_args)
+    else:
+        reward_func = airl(samples, venv, **airl_args)  # check airl arguments
     new_env = RewardVecEnvWrapper(
         venv=venv,
         reward_fn=reward_func,
@@ -52,6 +59,8 @@ def train_agent_learnt_reward(samples, venv, model_type, alg, learning_time_step
     model.learn(total_timesteps=learning_time_step)
     if model_path:
         model.save(model_path)
+    if return_disc:
+        return model, disc
     return model
 
 
@@ -62,26 +71,14 @@ def compare_agents(agent1, agent2, venv, num_samples):
     return traj1.rews.mean() - traj2.rews.mean()
 
 
-def provide_footage_from_fake_agent(samples, venv, save_path, agent=None, discriminator=None, args_for_airl=None,
+def eval_single_traj(samples, venv, save_path, agent=None, discriminator=None, args_for_airl=None,
                                     plot_confidence_hist=False):
     # return confidance level (has to use airl)
     if not agent:
         agent = train_agent_learnt_reward(samples, venv)
     if not discriminator:
         _, disc_func = airl(samples, venv, return_disc=True, **args_for_airl)
-
-        def f(states, actions, next_states, done) -> np.ndarray:
-            if isinstance(states, np.ndarray):
-                states = th.tensor(states)
-                actions = th.tensor(actions)
-                next_states = th.tensor(next_states)
-                done = th.tensor(done)
-            _, log_prob, _ = agent.policy.evaluate_actions(states, actions)
-            disc_result = disc_func(states, actions, next_states, done, log_prob)
-            if isinstance(states, np.ndarray):
-                return 1/(1 + th.exp(-disc_result)).numpy()
-            return 1/(1 + th.exp(-disc_result))
-        discriminator = f
+        discriminator = im_disc_to_paper_disc(disc_func, agent)
     past_obs, action, next_obs, dones, _ = generate_trajectory_footage(agent, venv, save_path)
     confidence = discriminator(past_obs, action, next_obs, dones)
     if plot_confidence_hist:
