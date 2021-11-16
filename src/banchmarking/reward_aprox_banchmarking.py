@@ -40,7 +40,7 @@ def check_reward_distribution(agent, alg, venv, num_traj, plot_hist=False, norm=
     return real_reward, fake_reward
 
 
-def train_agent_learnt_reward(samples, venv, model_type, learning_time_step, model_path=None, model_arg=None,
+def train_agent_learnt_reward(samples, venv, model_type, learning_time_step, save_model_path=None, model_arg=None,
                               airl_args=None, return_disc=False):  # could need a lot more arguments
     if not airl_args:
         airl_args = {}
@@ -55,29 +55,36 @@ def train_agent_learnt_reward(samples, venv, model_type, learning_time_step, mod
         venv=venv,
         reward_fn=reward_func,
     )
-    model = model_type(env=new_env, verbose=1, **model_arg)
-    model.learn(total_timesteps=learning_time_step)
-    if model_path:
-        model.save(model_path)
+    model = train_agent(new_env,model_type, learning_time_step, model_arg)
+    if save_model_path:
+        model.save(save_model_path)
     if return_disc:
         return model, disc
     return model
+
+
+def get_agent_avg_reward(agent, venv, num_samples):
+    traj = flatten_trajectories_with_rew(generate_trajectories(agent, venv, make_min_timesteps(num_samples)))
+    return traj.rews.mean()
 
 
 def compare_agents(agent1, agent2, venv, num_samples):
     #   >0 => agent 1 is better, <0 => agent 2 is better
     traj1 = flatten_trajectories_with_rew(generate_trajectories(agent1, venv, make_min_timesteps(num_samples)))
     traj2 = flatten_trajectories_with_rew(generate_trajectories(agent2, venv, make_min_timesteps(num_samples)))
-    return traj1.rews.mean() - traj2.rews.mean()
+    return get_agent_avg_reward(agent1, venv, num_samples) - get_agent_avg_reward(agent2, venv, num_samples)
 
 
 def traj_confidence(samples: Transitions, disc_func, agent, action_space_size):
     discriminator = discriminator_conversion(disc_func, agent, action_space_size)
-    confidence = discriminator(samples.obs.astype(np.float), samples.acts.astype(np.float),
-                               samples.next_obs.astype(np.float), samples.dones.astype(np.float))
+    confidence = discriminator(samples.obs, samples.acts, samples.next_obs, samples.dones)
     return confidence
 
 
+def train_agent(env, rl_algo, total_timesteps, rl_algo_args):
+    model = rl_algo(env=env, verbose=1, **rl_algo_args)
+    model.learn(total_timesteps=total_timesteps)
+    return model
 
 def eval_single_traj(venv, agent, action_space_size, save_path=None, samples=None, discriminator=None, args_for_airl=None,
                      plot_confidence_hist=False):
