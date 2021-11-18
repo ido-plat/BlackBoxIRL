@@ -6,7 +6,6 @@ from imitation.data.rollout import generate_trajectories, flatten_trajectories_w
 from src.alogirhms.airl import airl
 from src.utils.imitation_connector import *
 from stable_baselines3 import DQN, A2C, PPO
-from src.utils.agent_utils import generate_trajectory_footage
 from imitation.rewards.reward_wrapper import *
 
 
@@ -70,15 +69,7 @@ def get_agent_avg_reward(agent, venv, num_samples):
 
 def compare_agents(agent1, agent2, venv, num_samples):
     #   >0 => agent 1 is better, <0 => agent 2 is better
-    traj1 = flatten_trajectories_with_rew(generate_trajectories(agent1, venv, make_min_timesteps(num_samples)))
-    traj2 = flatten_trajectories_with_rew(generate_trajectories(agent2, venv, make_min_timesteps(num_samples)))
     return get_agent_avg_reward(agent1, venv, num_samples) - get_agent_avg_reward(agent2, venv, num_samples)
-
-
-def traj_confidence(samples: Transitions, disc_func, agent, action_space_size):
-    discriminator = discriminator_conversion(disc_func, agent, action_space_size)
-    confidence = discriminator(samples.obs, samples.acts, samples.next_obs, samples.dones)
-    return confidence
 
 
 def train_agent(env, rl_algo, total_timesteps, rl_algo_args):
@@ -86,18 +77,4 @@ def train_agent(env, rl_algo, total_timesteps, rl_algo_args):
     model.learn(total_timesteps=total_timesteps)
     return model
 
-def eval_single_traj(venv, agent, action_space_size, save_path=None, samples=None, discriminator=None, args_for_airl=None,
-                     plot_confidence_hist=False):
-    if not discriminator:
-        if not samples:
-            raise ValueError("Pass samples if there's no discriminator!!!")
-        _, disc_func = airl(samples, venv, return_disc=True, **args_for_airl)
-        discriminator = discriminator_conversion(disc_func, agent, action_space_size)
-    past_obs, action, next_obs, dones, _ = generate_trajectory_footage(agent, venv, save_path)
-    confidence = discriminator(past_obs, action, next_obs, dones)
-    if plot_confidence_hist:
-        plt.hist(confidence)
-        print('confidence mean: '+str(confidence.mean()))
-        plt.show()
-    return confidence, discriminator
 
