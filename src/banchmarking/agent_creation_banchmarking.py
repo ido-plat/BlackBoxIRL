@@ -6,6 +6,7 @@ from src.utils.imitation_connector import *
 from src.alogirhms.airl import *
 from typing import Sequence, List
 from src.utils.agent_utils import generate_trajectory_footage
+from stable_baselines3.common.callbacks import StopTrainingOnRewardThreshold, EvalCallback
 
 
 def fake_agent_classification(agent, disc_func, agents_to_asses: Sequence, labels: Sequence, action_space_size,
@@ -51,14 +52,22 @@ def eval_single_traj(venv, agent, action_space_size, save_path=None, samples=Non
 
 def generate_fake_agents(venv, algos: List, num_agents_per_algo, algo_kwargs: List, dictionary_save_path,
                          stopping_points, initial_name='Fake_agent_real_reward', max_timestep=pow(2, 17)) -> List:
+    model_list = []
     curr_agent = 0
     for i in range(num_agents_per_algo):
         for agent in algos:
-            file_path =''
-            generate_agent(venv, agent, algo_kwargs[curr_agent % len(algos)], stopping_points[curr_agent], file_path)
-    return []
+            file_path = dictionary_save_path + initial_name + "_" + (curr_agent % len(algos))
+            model_list.append(generate_agent(venv, agent, algo_kwargs[curr_agent % len(algos)]
+                                             , stopping_points[curr_agent], file_path, max_timestep))
+            curr_agent = curr_agent + 1
+    return model_list
 
 
-def generate_agent(venv, algo, algo_kwards, stopping_point, path):
-
-    pass
+def generate_agent(venv, algo, algo_kwards, stopping_point, model_path, max_timestep):
+    callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=stopping_point, verbose=0)
+    eval_callback = EvalCallback(venv, callback_on_new_best=callback_on_best, verbose=0)
+    model = algo(env=venv, verbose=1, **algo_kwards)
+    model.learn(total_timesteps=max_timestep, callback=eval_callback)
+    if model_path:
+        model.save(model_path)
+    return model
