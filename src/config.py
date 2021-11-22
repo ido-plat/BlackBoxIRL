@@ -1,3 +1,5 @@
+import numpy as np
+
 from stable_baselines3 import DQN, A2C, PPO
 from src.alogirhms.airl import airl
 
@@ -15,6 +17,7 @@ class Config:
 
     # agent configs
     agent_training_algo = DQN
+    model_total_training_steps = int(pow(2, 17))
     model_training_args = {
         # PPO
         # 'policy': 'MlpPolicy',
@@ -34,7 +37,6 @@ class Config:
         'train_freq': 4,
         'policy_kwargs': dict(net_arch=[256, 256])
     }
-    model_total_training_steps = int(pow(2, 17))
 
     # airl configs
     irl_alo = airl
@@ -42,7 +44,8 @@ class Config:
     airl_model_training_steps = int(pow(2, 13))
     airl_args = {
         'policy_training_steps': airl_model_training_steps,
-        'total_timesteps': airl_iterations * airl_model_training_steps
+        'total_timesteps': airl_iterations * airl_model_training_steps,
+        "allow_variable_horizon": env_max_timestep is not np.inf
     }
     # misc
-    num_transitions = int(5e4)
+    num_transitions = int(1e4)

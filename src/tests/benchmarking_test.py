@@ -7,11 +7,16 @@ from stable_baselines3 import DQN, A2C, PPO
 from imitation.algorithms.density import DensityType
 from src.alogirhms.airl import *
 from src.utils.agent_utils import generate_trajectory_footage
-from src.utils.env_utils import make_fixed_horizon_venv
+from src.utils.env_utils import make_fixed_horizon_venv, make_vec_env
 from src.config import Config
+
+
 class BenchMarkTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.venv = make_fixed_horizon_venv(Config.env, max_episode_steps=Config.env_max_timestep, n_envs=Config.num_env)
+        if Config.env_max_timestep is not np.inf:
+            self.venv = make_fixed_horizon_venv(Config.env, max_episode_steps=Config.env_max_timestep, n_envs=Config.num_env)
+        else:
+            self.venv = make_vec_env(Config.env, Config.num_env)
         self.expert = Config.expert_training_algo.load(Config.expert_path, self.venv)
         self.noise = None
 

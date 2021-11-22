@@ -4,7 +4,7 @@ from imitation.data.types import *
 
 from src.utils.imitation_connector import *
 from src.alogirhms.airl import *
-from typing import Sequence
+from typing import Sequence, List
 from src.utils.agent_utils import generate_trajectory_footage
 
 
@@ -47,3 +47,18 @@ def eval_single_traj(venv, agent, action_space_size, save_path=None, samples=Non
         print('confidence mean: '+str(confidence.mean()))
         plt.show()
     return confidence, discriminator
+
+
+def generate_fake_agents(venv, algos: List, num_agents_per_algo, algo_kwargs: List, dictionary_save_path,
+                         stopping_points, initial_name='Fake_agent_real_reward', max_timestep=pow(2, 17)) -> List:
+    curr_agent = 0
+    for i in range(num_agents_per_algo):
+        for agent in algos:
+            file_path =''
+            generate_agent(venv, agent, algo_kwargs[curr_agent % len(algos)], stopping_points[curr_agent], file_path)
+    return []
+
+
+def generate_agent(venv, algo, algo_kwards, stopping_point, path):
+
+    pass

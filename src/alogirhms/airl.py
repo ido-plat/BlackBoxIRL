@@ -8,7 +8,6 @@ import stable_baselines3 as sb3
 
 def airl(samples, venv, policy_training_steps, total_timesteps, disc_updates=4, batch_size=1024, logger=None,
          return_disc=False, save_reward_func_path=None, save_disc_path=None):
-    #   disc big is fake, low is expert
     if isinstance(samples, np.ndarray):
         samples = to_im_traj(samples)
         samples = rollout.flatten_trajectories(samples)
