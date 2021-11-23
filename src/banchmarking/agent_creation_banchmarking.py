@@ -56,7 +56,8 @@ def generate_fake_agents(venv, algos: List, num_agents_per_algo, algo_kwargs: Li
     curr_agent = 0
     for i in range(num_agents_per_algo):
         for agent in algos:
-            file_path = dictionary_save_path + initial_name + "_" + (curr_agent % len(algos))
+            file_path = dictionary_save_path + initial_name + "_"+str(curr_agent) + agent.__name__
+            print('starting ' + file_path)
             model_list.append(generate_agent(venv, agent, algo_kwargs[curr_agent % len(algos)]
                                              , stopping_points[curr_agent], file_path, max_timestep))
             curr_agent = curr_agent + 1
@@ -68,6 +69,7 @@ def generate_agent(venv, algo, algo_kwards, stopping_point, model_path, max_time
     eval_callback = EvalCallback(venv, callback_on_new_best=callback_on_best, verbose=0)
     model = algo(env=venv, verbose=1, **algo_kwards)
     model.learn(total_timesteps=max_timestep, callback=eval_callback)
+    # model.learn(total_timesteps=max_timestep)
     if model_path:
         model.save(model_path)
     return model

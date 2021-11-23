@@ -18,25 +18,37 @@ class Config:
     # agent configs
     agent_training_algo = DQN
     model_total_training_steps = int(pow(2, 17))
-    model_training_args = {
-        # PPO
-        # 'policy': 'MlpPolicy',
-        # 'n_steps': 1024
+    all_model_training_args = {
+        DQN: {
+            'policy': 'MlpPolicy',
+            'batch_size': 128,
+            'target_update_interval': 250,
+            'buffer_size': 50000,
+            'exploration_final_eps': 0.1,
+            'exploration_fraction': 0.12,
+            'gamma': 0.99,
+            'gradient_steps': -1,
+            'learning_rate': 0.00063,
+            'learning_starts': 0,
+            'train_freq': 4,
+            'policy_kwargs': dict(net_arch=[256, 256])
+        },
+        PPO: {
+            'policy': 'MlpPolicy',
+            'n_steps': 1024,
+            'ent_coef': 0.01,
+            'gae_lambda': 0.98,
+            'gamma': 0.999
+        },
+        A2C: {
+            'policy': 'MlpPolicy',
+            'learning_rate': 0.00083,
+            'gamma': 0.995,
+            'ent_coef': 1.0e-05
+        }
 
-        # DQN
-        'policy': 'MlpPolicy',
-        'batch_size': 128,
-        'target_update_interval': 250,
-        'buffer_size': 50000,
-        'exploration_final_eps': 0.1,
-        'exploration_fraction': 0.12,
-        'gamma': 0.99,
-        'gradient_steps': -1,
-        'learning_rate': 0.00063,
-        'learning_starts': 0,
-        'train_freq': 4,
-        'policy_kwargs': dict(net_arch=[256, 256])
     }
+    model_training_args = all_model_training_args[agent_training_algo]
 
     # airl configs
     irl_alo = airl
@@ -48,4 +60,4 @@ class Config:
         "allow_variable_horizon": env_max_timestep is not np.inf
     }
     # misc
-    num_transitions = int(1e4)
+    num_transitions = int(5e4)
