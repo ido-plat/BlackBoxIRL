@@ -10,14 +10,14 @@ from src.utils.agent_utils import generate_trajectory_footage
 from src.utils.env_utils import make_fixed_horizon_venv, make_vec_env
 from src.config import Config
 
-
 class BenchMarkTest(unittest.TestCase):
     def setUp(self) -> None:
         if Config.env_max_timestep is not np.inf:
             self.venv = make_fixed_horizon_venv(Config.env, max_episode_steps=Config.env_max_timestep, n_envs=Config.num_env)
         else:
             self.venv = make_vec_env(Config.env, Config.num_env)
-        self.expert = Config.expert_training_algo.load(Config.expert_path, self.venv)
+        self.expert = Config.expert_training_algo.load(Config.expert_path, self.venv,
+                                                       costum_object=Config.expert_custom_objects)
         self.noise = None
 
 
@@ -76,7 +76,7 @@ class BenchMarkTest(unittest.TestCase):
          # agent = train_agent(self.venv, rl_algo, config.model_total_training_steps, rl_args)
         # agent_save_path = 'src/tests/temp/real_reward_agent'
         # agent.save(agent_save_path)
-        agent_load_path = 'src/tests/temp/LunarLander-v2_fake_agent1.zip'
+        agent_load_path = 'src/tests/temp/real_reward_agent2.zip'
         agent = config.agent_training_algo.load(agent_load_path)
         avg_rewards = get_agent_avg_reward(agent, self.venv, config.num_transitions)
         print('avg reward: '+str(avg_rewards))

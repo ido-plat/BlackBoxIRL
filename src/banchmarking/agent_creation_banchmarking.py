@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from imitation.data.rollout import flatten_trajectories_with_rew, generate_trajectories, make_min_timesteps
 from imitation.data.types import *
-
+from src.utils.confidence_plots import plot_distribution
 from src.utils.imitation_connector import *
 from src.alogirhms.airl import *
 from typing import Sequence, List
@@ -10,7 +10,7 @@ from stable_baselines3.common.callbacks import StopTrainingOnRewardThreshold, Ev
 
 
 def fake_agent_classification(agent, disc_func, agents_to_asses: Sequence, labels: Sequence, action_space_size,
-                              venv, num_trajectories, num_bins=100, label_size=20):
+                              venv, num_trajectories, show=True, plot_function=None, **plot_kwarg):
 
     assert len(agents_to_asses) == len(labels)
     confidences = []
@@ -18,14 +18,12 @@ def fake_agent_classification(agent, disc_func, agents_to_asses: Sequence, label
         traj = flatten_trajectories_with_rew(generate_trajectories(assessed_agent, venv, make_min_timesteps(num_trajectories)))
         confidences.append(traj_confidence(traj, disc_func, agent, action_space_size))
         print('finished assessing ' + str(labels[i]) + ' - avg confidence: ' + str(confidences[i].mean()))
-    bins = np.linspace(0, 1, num_bins)
-    for i, confidence in enumerate(confidences):
-        plt.hist(confidence, alpha=0.5, bins=bins, label=labels[i], density=True)
-    plt.legend()
-    plt.xticks(fontsize=label_size)
-    plt.xlabel('Confidence', fontsize=label_size + 2)
-    # plt.ylim(0, 100)
-    plt.show()
+    if not show:
+        return confidences
+    if not plot_function:
+        plot_function = plot_distribution
+    plot_function(confidences, labels, **plot_kwarg)
+    return confidences
 
 
 def traj_confidence(samples: Transitions, disc_func, agent, action_space_size):

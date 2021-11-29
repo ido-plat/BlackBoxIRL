@@ -14,7 +14,10 @@ class Config:
     # expert configs
     expert_path = 'data/agents/LunarLander-v2_dqn_expert.zip'
     expert_training_algo = DQN
-
+    expert_custom_objects = {
+        "learning_rate": lambda x: .003,
+        "clip_range": lambda x: .02
+    }   # need to sync python 3.8 and 3.7
     # agent configs
     agent_training_algo = DQN
     model_total_training_steps = int(pow(2, 17))
@@ -53,11 +56,13 @@ class Config:
     # airl configs
     irl_alo = airl
     airl_iterations = 800
-    airl_model_training_steps = int(pow(2, 13))
+    airl_model_training_steps = int(pow(2, 15))
     airl_args = {
         'policy_training_steps': airl_model_training_steps,
         'total_timesteps': airl_iterations * airl_model_training_steps,
-        "allow_variable_horizon": env_max_timestep is not np.inf
+        "allow_variable_horizon": env_max_timestep is not np.inf,
+        'disc_updates': 8
+
     }
     # misc
-    num_transitions = int(5e4)
+    num_transitions = int(5e6)

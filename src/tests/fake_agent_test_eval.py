@@ -1,16 +1,16 @@
+import unittest
+import os
+from stable_baselines3 import DQN, A2C, PPO
+from imitation.util import util
+from imitation.algorithms.density import DensityType
 from src.banchmarking.reward_aprox_banchmarking import *
 from src.banchmarking.agent_creation_banchmarking import *
 from src.alogirhms.density_approximate import density_aprox
-from imitation.util import util
-import unittest
-from stable_baselines3 import DQN, A2C, PPO
-from imitation.algorithms.density import DensityType
 from src.alogirhms.airl import *
 from src.utils.agent_utils import generate_trajectory_footage
 from src.utils.env_utils import make_fixed_horizon_venv, make_vec_env
 from src.config import Config
-import glob
-
+from src.utils.confidence_plots import plot_bar_mean
 
 class FakeAgentTestEval(unittest.TestCase):
     def setUp(self) -> None:
@@ -24,6 +24,7 @@ class FakeAgentTestEval(unittest.TestCase):
         self.algo_list = [DQN, PPO]
         self.num_algo = len(self.algo_list)
         self.save_dictionary_path = 'src/tests/temp/fake_agents/'
+        self.plot_function = plot_bar_mean
 
     def test_fake_agents_creation(self):
 
@@ -36,14 +37,15 @@ class FakeAgentTestEval(unittest.TestCase):
 
         stopping_points = [round((expert_mean_reward - noise_mean) * (i + 1) / (num_agents + 2) + noise_mean, 4)
                            for i in range(num_agents)]
-
+        big_number = 1e10
+        stopping_points = [-big_number for _ in range(num_agents)]
         generate_fake_agents(self.venv, self.algo_list, num_agents_per, kwargs_alg, self.save_dictionary_path,
                              stopping_points, max_timestep=pow(2, 15))
 
     def test_fake_agent_eval(self):
         agent_path = 'src/tests/temp/LunarLander-v2_fake_agent1'
         disc_func_path = 'src/tests/temp/disc_func2'
-        fakes_path = glob.glob(self.save_dictionary_path)
+        fakes_path = [self.save_dictionary_path + path for path in os.listdir(self.save_dictionary_path)]
         disc_func = load_disc_func(disc_func_path)
         agent = Config.agent_training_algo.load(agent_path, self.venv)
         fakes = [self._path_to_algo(path).load(path, self.venv) for path in fakes_path]
@@ -53,10 +55,10 @@ class FakeAgentTestEval(unittest.TestCase):
         labels.append('Real Agent')
         labels.append('Expert')
         fake_agent_classification(agent, disc_func, fakes, labels, Config.env_action_space_size, self.venv,
-                                  Config.num_transitions)
+                                  Config.num_transitions, plot_function=self.plot_function, agent_color='r')
 
     def test_mean_fake_score(self):
-        fakes_path = glob.glob(self.save_dictionary_path)
+        fakes_path = [self.save_dictionary_path + path for path in os.listdir(self.save_dictionary_path)]
         fakes = [self._path_to_algo(path).load(path, self.venv) for path in fakes_path]
         for i in range(len(fakes)):
             avg = get_agent_avg_reward(fakes[i], self.venv, Config.num_transitions)

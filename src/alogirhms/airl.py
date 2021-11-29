@@ -7,7 +7,7 @@ import stable_baselines3 as sb3
 
 
 def airl(samples, venv, policy_training_steps, total_timesteps, disc_updates=4, batch_size=1024, logger=None,
-         return_disc=False, save_reward_func_path=None, save_disc_path=None):
+         return_disc=False, save_reward_func_path=None, save_disc_path=None, allow_variable_horizon=False):
     if isinstance(samples, np.ndarray):
         samples = to_im_traj(samples)
         samples = rollout.flatten_trajectories(samples)
@@ -16,7 +16,7 @@ def airl(samples, venv, policy_training_steps, total_timesteps, disc_updates=4, 
         demonstrations=samples,
         demo_batch_size=batch_size,
         gen_algo=sb3.PPO("MlpPolicy", venv, verbose=1, n_steps=policy_training_steps),
-        custom_logger=logger, n_disc_updates_per_round=disc_updates
+        custom_logger=logger, n_disc_updates_per_round=disc_updates, allow_variable_horizon=allow_variable_horizon
     )
     airl_trainer.train(total_timesteps=total_timesteps)
     if save_disc_path:
