@@ -10,7 +10,6 @@ class Config:
     env_action_space_size = 4
     num_env = 1
     env_max_timestep = 500
-
     # expert configs
     expert_path = 'data/agents/LunarLander-v2_dqn_expert.zip'
     expert_training_algo = DQN
@@ -65,4 +64,4 @@ class Config:
 
     }
     # misc
-    num_transitions = int(5e6)
+    num_transitions = int(1e4)

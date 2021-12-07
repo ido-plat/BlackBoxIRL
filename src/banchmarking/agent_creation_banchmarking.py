@@ -49,7 +49,7 @@ def eval_single_traj(venv, agent, action_space_size, save_path=None, samples=Non
 
 
 def generate_fake_agents(venv, algos: List, num_agents_per_algo, algo_kwargs: List, dictionary_save_path,
-                         stopping_points, initial_name='Fake_agent_real_reward', max_timestep=pow(2, 17)) -> List:
+                         stopping_points, initial_name='Fake', max_timestep=pow(2, 17)) -> List:
     model_list = []
     curr_agent = 0
     for i in range(num_agents_per_algo):
@@ -62,7 +62,12 @@ def generate_fake_agents(venv, algos: List, num_agents_per_algo, algo_kwargs: Li
     return model_list
 
 
+def create_stopping_points(num_points, min_avg, max_avg):
+    pass
+
+
 def generate_agent(venv, algo, algo_kwards, stopping_point, model_path, max_timestep):
+    venv.reset()
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=stopping_point, verbose=0)
     eval_callback = EvalCallback(venv, callback_on_new_best=callback_on_best, verbose=0)
     model = algo(env=venv, verbose=1, **algo_kwards)

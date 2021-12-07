@@ -39,8 +39,7 @@ def plot_distribution(confidences, labels, num_bins=100, label_size=20):
     return confidences
 
 
-def plot_bar_mean(confidences, labels, font_size=10, agent_color=None, expert_color=None,
-                  agent_id=-2, expert_id=-1):
+def plot_bar_mean(confidences, labels, font_size=10, agent_color=None, expert_color=None, agent_id=-2, expert_id=-1):
     fig, ax = plt.subplots(figsize=(16, 9))
     ax.xaxis.set_label_text('Confidence', fontsize=font_size + 5)
     bars = ax.barh(labels, [round(conf.mean(), 4) for conf in confidences])
@@ -61,27 +60,20 @@ def plot_bar_mean(confidences, labels, font_size=10, agent_color=None, expert_co
     ax.yaxis.set_tick_params(pad=10)
 
     # Add x, y gridlines
-    ax.grid(b=True, color='grey',
-            linestyle='-.', linewidth=0.5,
-            alpha=0.2)
+    ax.grid(b=True, color='grey', linestyle='-.', linewidth=0.5, alpha=0.2)
 
     # Show top values
     ax.invert_yaxis()
 
     # Add annotation to bars
     for i in ax.patches:
-        plt.text(i.get_width() + 0.02, i.get_y() + 0.5,
-                 str(round((i.get_width()), 2)),
-                 fontsize=font_size, fontweight='bold',
-                 color='grey')
+        plt.text(i.get_width() + 0.02, i.get_y() + 0.5, str(round((i.get_width()), 2)), fontsize=font_size,
+                 fontweight='bold', color='grey')
 
     # Add Plot Title
     ax.set_title('Mean Confidence Plot', loc='center', fontsize=font_size+10)
     plt.show()
-# from src.utils.confidence_plots import plot_bars
-# data = [(k+1) * np.ones(k) for k in range(1, 9)]
-# base_label = 'This is a long sentance '
-# labels =[base_label + str(k) for k in range(1, 9)]
-# plot_bars(data, labels)
+
+
 def _is_tformed(confidences):
     return isinstance(confidences[0], list)

@@ -10,6 +10,7 @@ from src.utils.agent_utils import generate_trajectory_footage
 from src.utils.env_utils import make_fixed_horizon_venv, make_vec_env
 from src.config import Config
 
+
 class BenchMarkTest(unittest.TestCase):
     def setUp(self) -> None:
         if Config.env_max_timestep is not np.inf:
@@ -17,7 +18,7 @@ class BenchMarkTest(unittest.TestCase):
         else:
             self.venv = make_vec_env(Config.env, Config.num_env)
         self.expert = Config.expert_training_algo.load(Config.expert_path, self.venv,
-                                                       costum_object=Config.expert_custom_objects)
+                                                       custom_objects=Config.expert_custom_objects)
         self.noise = None
 
 
@@ -105,5 +106,7 @@ class BenchMarkTest(unittest.TestCase):
                                   ['fake agent 1', 'fake agent 2 ', 'expert', 'noise'], Config.env_action_space_size,
                                   self.venv, Config.num_transitions)
 
+
 if __name__ == '__main__':
-    unittest.main()
+    t = BenchMarkTest()
+    t.test_full_pipeline()

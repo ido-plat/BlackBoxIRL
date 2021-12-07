@@ -27,20 +27,19 @@ class FakeAgentTestEval(unittest.TestCase):
         self.plot_function = plot_bar_mean
 
     def test_fake_agents_creation(self):
-
+        assert Config.env_max_timestep == np.inf
         kwargs_alg = [Config.all_model_training_args[alg] for alg in self.algo_list]
         num_agents_per = 3
-        # expert_mean_reward = 0.278
-        expert_mean_reward = -0.3
+        expert_mean_reward = 0.278
         noise_mean = -0.33
         num_agents = num_agents_per * self.num_algo
 
-        stopping_points = [round((expert_mean_reward - noise_mean) * (i + 1) / (num_agents + 2) + noise_mean, 4)
+        stopping_points = [500 * round((expert_mean_reward - noise_mean) * (i + 1) / (num_agents + 2) + noise_mean, 4)
                            for i in range(num_agents)]
         big_number = 1e10
-        stopping_points = [-big_number for _ in range(num_agents)]
+        # stopping_points = [-big_number for _ in range(num_agents)]
         generate_fake_agents(self.venv, self.algo_list, num_agents_per, kwargs_alg, self.save_dictionary_path,
-                             stopping_points, max_timestep=pow(2, 15))
+                             stopping_points, max_timestep=pow(2, 17))
 
     def test_fake_agent_eval(self):
         agent_path = 'src/tests/temp/LunarLander-v2_fake_agent1'
