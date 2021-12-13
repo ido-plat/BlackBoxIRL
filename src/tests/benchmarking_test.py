@@ -94,9 +94,10 @@ class BenchMarkTest(unittest.TestCase):
                                   self.venv, Config.num_transitions)
 
     def test_full_pipeline(self):
-        agent1_save_path = 'src/tests/temp/DEBUGGING_AGENT'
+        print("starting full pipeline")
+        agent1_save_path = 'src/tests/temp/LunarLander-v2_fake_agent1'
         agent2_save_path = 'src/tests/temp/LunarLander-v2_fake_agent2'
-        disc1_save_path = 'src/tests/temp/DEBUGGING_DISC'
+        disc1_save_path = 'src/tests/temp/disc_func1'
         disc2_save_path = 'src/tests/temp/disc_func2'
         self.fake_agent_creation(agent1_save_path, disc1_save_path)
         self.fake_agent_creation(agent2_save_path, disc2_save_path)
