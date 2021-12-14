@@ -7,7 +7,8 @@ import stable_baselines3 as sb3
 
 
 def airl(samples, venv, policy_training_steps, total_timesteps, disc_updates=4, batch_size=1024, logger=None,
-         return_disc=False, save_reward_func_path=None, save_disc_path=None, allow_variable_horizon=False):
+         return_disc=False, save_reward_func_path=None, save_disc_path=None, allow_variable_horizon=False,
+         save_iagent_path=None):
     if isinstance(samples, np.ndarray):
         samples = to_im_traj(samples)
         samples = rollout.flatten_trajectories(samples)
@@ -19,6 +20,8 @@ def airl(samples, venv, policy_training_steps, total_timesteps, disc_updates=4, 
         custom_logger=logger, n_disc_updates_per_round=disc_updates, allow_variable_horizon=allow_variable_horizon
     )
     airl_trainer.train(total_timesteps=total_timesteps)
+    if save_iagent_path:
+        airl_trainer.gen_algo.save(save_iagent_path)
     if save_disc_path:
         th.save(airl_trainer._reward_net, save_disc_path)
     if save_reward_func_path:
