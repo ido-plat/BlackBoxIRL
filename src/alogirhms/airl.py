@@ -2,16 +2,16 @@ import numpy as np
 import torch as th
 from src.utils.imitation_connector import to_im_traj
 from imitation.algorithms.adversarial import airl as im_airl
-from imitation.data import rollout
+from imitation.data import rollout, types
 import stable_baselines3 as sb3
 
 
 def airl(samples, venv, policy_training_steps, total_timesteps, disc_updates=4, batch_size=1024, logger=None,
-         return_disc=False, save_reward_func_path=None, save_disc_path=None, allow_variable_horizon=False,
-         save_iagent_path=None):
+         return_disc=False, save_reward_func_path=None, save_disc_path=None, save_iagent_path=None,
+         allow_variable_horizon=False,
+         ):
     if isinstance(samples, np.ndarray):
-        samples = to_im_traj(samples)
-        samples = rollout.flatten_trajectories(samples)
+        raise ValueError('give transitions to airl - not np array')
     airl_trainer = im_airl.AIRL(
         venv=venv,
         demonstrations=samples,

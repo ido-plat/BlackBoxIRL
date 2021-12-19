@@ -47,7 +47,7 @@ class FakeAgentTestEval(unittest.TestCase):
 
     def test_fake_agent_eval(self):
         agent_path = 'data/agents/our_agents/LunarLander-v2_fake_agent1'
-        disc_func_path = 'data/discriminator_functions/disc_func3'
+        disc_func_path = 'data/discriminator_functions/disc_func1'
         disc_setting_agent_path = 'data/agents/our_agents/LunarLander-v2_fake_agent2'
         fakes_path = [self.save_dictionary_path + path for path in os.listdir(self.save_dictionary_path)]
         disc_func = load_disc_func(disc_func_path)
