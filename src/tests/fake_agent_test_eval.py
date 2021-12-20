@@ -46,18 +46,20 @@ class FakeAgentTestEval(unittest.TestCase):
                              stopping_points, max_timestep=pow(2, 17))
 
     def test_fake_agent_eval(self):
-        agent_path = 'src/tests/temp/LunarLander-v2_fake_agent1'
-        disc_func_path = 'src/tests/temp/disc_func2'
+        agent_path = 'data/agents/our_agents/LunarLander-v2_fake_agent1'
+        disc_func_path = 'data/discriminator_functions/disc_func1'
+        disc_setting_agent_path = 'data/agents/our_agents/LunarLander-v2_fake_agent2'
         fakes_path = [self.save_dictionary_path + path for path in os.listdir(self.save_dictionary_path)]
         disc_func = load_disc_func(disc_func_path)
         agent = Config.agent_training_algo.load(agent_path, self.venv)
+        disc_setting_agent = Config.agent_training_algo.load(disc_setting_agent_path, self.venv)
         fakes = [self._path_to_algo(path).load(path, self.venv) for path in fakes_path]
         labels = [self._path_to_label(path) for path in fakes_path]
         fakes.append(agent)
         fakes.append(self.expert)
         labels.append('Real Agent')
         labels.append('Expert')
-        fake_agent_classification(agent, disc_func, fakes, labels, Config.env_action_space_size, self.venv,
+        fake_agent_classification(disc_setting_agent, disc_func, fakes, labels, Config.env_action_space_size, self.venv,
                                   Config.num_transitions, plot_function=self.plot_function, agent_color='r')
 
     def test_mean_fake_score(self):

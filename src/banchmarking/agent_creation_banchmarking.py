@@ -72,7 +72,6 @@ def generate_agent(venv, algo, algo_kwards, stopping_point, model_path, max_time
     eval_callback = EvalCallback(venv, callback_on_new_best=callback_on_best, verbose=0)
     model = algo(env=venv, verbose=1, **algo_kwards)
     model.learn(total_timesteps=max_timestep, callback=eval_callback)
-    # model.learn(total_timesteps=max_timestep)
     if model_path:
         model.save(model_path)
     return model

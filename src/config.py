@@ -54,8 +54,8 @@ class Config:
 
     # airl configs
     irl_alo = airl
-    airl_iterations = 800
-    airl_model_training_steps = int(pow(2, 15))
+    airl_iterations = 2
+    airl_model_training_steps = int(pow(2, 13))
     airl_args = {
         'policy_training_steps': airl_model_training_steps,
         'total_timesteps': airl_iterations * airl_model_training_steps,

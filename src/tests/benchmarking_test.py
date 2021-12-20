@@ -43,12 +43,14 @@ class BenchMarkTest(unittest.TestCase):
         # plt.hist(act)
         # plt.show()
 
-    def fake_agent_creation(self, save_agent_path, save_disc_func_path):
+    def fake_agent_creation(self, save_agent_path, save_disc_func_path, save_iterated_agent_path, save_reward_function):
         config = Config
         agent_training_alg = config.agent_training_algo
         num_traj = int(config.num_transitions)
         airl_arg = config.airl_args.copy()
         airl_arg['save_disc_path'] = save_disc_func_path
+        airl_arg['save_reward_func_path'] = save_reward_function
+        airl_arg['save_iagent_path'] = save_iterated_agent_path
         samples1 = flatten_trajectories_with_rew(generate_trajectories(self.expert, self.venv, make_min_timesteps(num_traj)))
         print('generated samples')
         train_agent_learnt_reward(samples1, self.venv, agent_training_alg,
@@ -58,14 +60,18 @@ class BenchMarkTest(unittest.TestCase):
 
     def test_compare_expart_agent_noise(self):
         config = Config
-        agent_path = 'src/tests/temp/LunarLander-v2_fake_agent1'
+        agent_path = 'src/tests/temp/LunarLander-v2_fake_agent1_old'
+        agent2_path = 'src/tests/temp/LunarLander-v2_fake_agent2_old'
         agent_training_alg = config.agent_training_algo
         agent = agent_training_alg.load(agent_path, self.venv)
+        agent2 = agent_training_alg.load(agent2_path, self.venv)
         expert_avg_reward = get_agent_avg_reward(self.expert, self.venv, config.num_transitions)
         agent_avg_reward = get_agent_avg_reward(agent, self.venv, config.num_transitions)
+        agent_avg_reward2 = get_agent_avg_reward(agent2, self.venv, config.num_transitions)
         noise_avg_reward = get_agent_avg_reward(self.noise, self.venv, config.num_transitions)
         print('Expert mean rewards ' + str(expert_avg_reward))
         print('Agent mean rewards ' + str(agent_avg_reward))
+        print('Agent 2 mean rewards ' + str(agent_avg_reward2))
         print('Noise mean rewards ' + str(noise_avg_reward))
 
 
@@ -84,10 +90,10 @@ class BenchMarkTest(unittest.TestCase):
         generate_trajectory_footage(agent, self.venv, gif_path)
 
     def test_partial_pipelie(self):
-        agent_path = 'src/tests/temp/LunarLander-v2_fake_agent1'
-        disc_func_path = 'src/tests/temp/disc_func2'
+        agent_path = 'src/tests/temp/LunarLander-v2_fake_agent1_old'
+        disc_func_path = 'data/discriminator_functions/disc_func2'
         agent = Config.agent_training_algo.load(agent_path, self.venv)
-        agent2_path = 'src/tests/temp/LunarLander-v2_fake_agent2'
+        agent2_path = 'src/tests/temp/LunarLander-v2_fake_agent2_old'
         agent2 = Config.agent_training_algo.load(agent2_path, self.venv)
         fake_agent_classification(agent, load_disc_func(disc_func_path), [agent, self.expert, agent2],
                                   ['fake agent', 'expert', 'fake agent2'], Config.env_action_space_size,
@@ -95,12 +101,18 @@ class BenchMarkTest(unittest.TestCase):
 
     def test_full_pipeline(self):
         print("starting full pipeline")
-        agent1_save_path = 'src/tests/temp/LunarLander-v2_fake_agent1'
-        agent2_save_path = 'src/tests/temp/LunarLander-v2_fake_agent2'
+        # TODO CHANGE BELOW URL
+        agent1_save_path = 'src/tests/temp/LunarLander-v2_agent1'
+        agent2_save_path = 'src/tests/temp/LunarLander-v2_agent2'
+        iagent1_save_path = 'src/tests/temp/LunarLander-v2_iterative_agent1'
+        iagent2_save_path = 'src/tests/temp/LunarLander-v2_iterative_agent2'
+        reward1_func_path = 'src/tests/temp/LunarLander-v2_reward_func1'
+        reward2_func_path = 'src/tests/temp/LunarLander-v2_reward_func2'
         disc1_save_path = 'src/tests/temp/disc_func1'
         disc2_save_path = 'src/tests/temp/disc_func2'
-        self.fake_agent_creation(agent1_save_path, disc1_save_path)
-        self.fake_agent_creation(agent2_save_path, disc2_save_path)
+        # TODO CHANGE ABOVE URL
+        self.fake_agent_creation(agent1_save_path, disc1_save_path, iagent1_save_path, reward1_func_path)
+        self.fake_agent_creation(agent2_save_path, disc2_save_path, iagent2_save_path, reward2_func_path)
         agent1 = Config.agent_training_algo.load(agent1_save_path, self.venv)
         agent2 = Config.agent_training_algo.load(agent2_save_path, self.venv)
         fake_agent_classification(agent1, load_disc_func(disc2_save_path), [agent1, agent2, self.expert, self.noise],
