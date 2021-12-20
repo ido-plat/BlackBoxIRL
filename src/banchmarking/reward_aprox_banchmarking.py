@@ -73,8 +73,11 @@ def compare_agents(agent1, agent2, venv, num_samples):
 
 
 def train_agent(env, rl_algo, total_timesteps, rl_algo_args):
+    print("create model")
     model = rl_algo(env=env, verbose=1, **rl_algo_args)
+    print("start learning")
     model.learn(total_timesteps=total_timesteps)
+    print("finish learning")
     return model
 
 

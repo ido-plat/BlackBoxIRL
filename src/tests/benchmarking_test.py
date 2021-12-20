@@ -90,27 +90,25 @@ class BenchMarkTest(unittest.TestCase):
         generate_trajectory_footage(agent, self.venv, gif_path)
 
     def test_partial_pipelie(self):
-        agent_path = 'src/tests/temp/LunarLander-v2_fake_agent1_old'
-        disc_func_path = 'data/discriminator_functions/disc_func2'
-        agent = Config.agent_training_algo.load(agent_path, self.venv)
-        agent2_path = 'src/tests/temp/LunarLander-v2_fake_agent2_old'
-        agent2 = Config.agent_training_algo.load(agent2_path, self.venv)
-        fake_agent_classification(agent, load_disc_func(disc_func_path), [agent, self.expert, agent2],
-                                  ['fake agent', 'expert', 'fake agent2'], Config.env_action_space_size,
+        agent_path = 'data/agents/our_agents/LunarLander-v2_fake_agent1.zip'
+        disc_func_path = 'data/disc_functions/disc_func1'
+        agent = Config.agent_training_algo.load(agent_path, self.venv, custom_objects=Config.expert_custom_objects)
+        agent2_path = 'data/agents/our_agents/LunarLander-v2_fake_agent2.zip'
+        agent2 = Config.agent_training_algo.load(agent2_path, self.venv, custom_objects=Config.expert_custom_objects)
+        fake_agent_classification(agent, load_disc_func(disc_func_path), [agent2, self.expert, self.noise],
+                                  ['fake agent', 'expert', 'Noise'], Config.env_action_space_size,
                                   self.venv, Config.num_transitions)
 
     def test_full_pipeline(self):
         print("starting full pipeline")
-        # TODO CHANGE BELOW URL
-        agent1_save_path = 'src/tests/temp/LunarLander-v2_agent1'
-        agent2_save_path = 'src/tests/temp/LunarLander-v2_agent2'
-        iagent1_save_path = 'src/tests/temp/LunarLander-v2_iterative_agent1'
-        iagent2_save_path = 'src/tests/temp/LunarLander-v2_iterative_agent2'
-        reward1_func_path = 'src/tests/temp/LunarLander-v2_reward_func1'
-        reward2_func_path = 'src/tests/temp/LunarLander-v2_reward_func2'
-        disc1_save_path = 'src/tests/temp/disc_func1'
-        disc2_save_path = 'src/tests/temp/disc_func2'
-        # TODO CHANGE ABOVE URL
+        agent1_save_path = 'data/agents/our_agents/LunarLander-v2_agent1'
+        agent2_save_path = 'data/agents/our_agents/LunarLander-v2_agent2'
+        iagent1_save_path = 'data/iagents/LunarLander-v2_iterative_agent1'
+        iagent2_save_path = 'data/iagents/LunarLander-v2_iterative_agent2'
+        reward1_func_path = 'data/reward_functions/LunarLander-v2_reward_func1'
+        reward2_func_path = 'data/reward_functions/LunarLander-v2_reward_func2'
+        disc1_save_path = 'data/disc_functions/disc_func1'
+        disc2_save_path = 'data/disc_functions/disc_func2'
         self.fake_agent_creation(agent1_save_path, disc1_save_path, iagent1_save_path, reward1_func_path)
         self.fake_agent_creation(agent2_save_path, disc2_save_path, iagent2_save_path, reward2_func_path)
         agent1 = Config.agent_training_algo.load(agent1_save_path, self.venv)

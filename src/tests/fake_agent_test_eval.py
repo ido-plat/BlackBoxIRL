@@ -23,11 +23,12 @@ class FakeAgentTestEval(unittest.TestCase):
                                                 n_envs=Config.num_env)
         else:
             self.venv = make_vec_env(Config.env, Config.num_env)
-        self.expert = Config.expert_training_algo.load(Config.expert_path, self.venv)
+        self.co = Config.expert_custom_objects if Config.in_lab else None
+        self.expert = Config.expert_training_algo.load(Config.expert_path, self.venv, custom_objects=self.co)
         self.noise = None
         self.algo_list = [DQN, PPO]
         self.num_algo = len(self.algo_list)
-        self.save_dictionary_path = 'src/tests/temp/fake_agents/'
+        self.save_dictionary_path = 'data/fakes/'
         self.plot_function = plot_bar_mean
 
     def test_fake_agents_creation(self):
@@ -47,13 +48,13 @@ class FakeAgentTestEval(unittest.TestCase):
 
     def test_fake_agent_eval(self):
         agent_path = 'data/agents/our_agents/LunarLander-v2_fake_agent1'
-        disc_func_path = 'data/discriminator_functions/disc_func1'
+        disc_func_path = 'data/disc_functions/disc_func2'
         disc_setting_agent_path = 'data/agents/our_agents/LunarLander-v2_fake_agent2'
         fakes_path = [self.save_dictionary_path + path for path in os.listdir(self.save_dictionary_path)]
         disc_func = load_disc_func(disc_func_path)
-        agent = Config.agent_training_algo.load(agent_path, self.venv)
+        agent = Config.agent_training_algo.load(agent_path, self.venv, custom_objects=self.co)
         disc_setting_agent = Config.agent_training_algo.load(disc_setting_agent_path, self.venv)
-        fakes = [self._path_to_algo(path).load(path, self.venv) for path in fakes_path]
+        fakes = [self._path_to_algo(path).load(path, self.venv, custom_objects=self.co) for path in fakes_path]
         labels = [self._path_to_label(path) for path in fakes_path]
         fakes.append(agent)
         fakes.append(self.expert)

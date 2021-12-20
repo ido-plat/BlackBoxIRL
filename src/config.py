@@ -1,3 +1,4 @@
+
 import numpy as np
 
 from stable_baselines3 import DQN, A2C, PPO
@@ -5,6 +6,9 @@ from src.alogirhms.airl import airl
 
 
 class Config:
+    # misc
+    num_transitions = int(1e7)
+    in_lab = True
     # env configs
     env = 'LunarLander-v2'
     env_action_space_size = 4
@@ -16,7 +20,7 @@ class Config:
     expert_custom_objects = {
         "learning_rate": lambda x: .003,
         "clip_range": lambda x: .02
-    }   # need to sync python 3.8 and 3.7
+    } if in_lab else None  # need to sync python 3.8 and 3.7
     # agent configs
     agent_training_algo = DQN
     model_total_training_steps = int(pow(2, 17))
@@ -54,14 +58,12 @@ class Config:
 
     # airl configs
     irl_alo = airl
-    airl_iterations = 2
-    airl_model_training_steps = int(pow(2, 13))
+    airl_iterations = 1000
+    airl_model_training_steps = int(pow(2, 15))
     airl_args = {
         'policy_training_steps': airl_model_training_steps,
         'total_timesteps': airl_iterations * airl_model_training_steps,
         "allow_variable_horizon": env_max_timestep is not np.inf,
-        'disc_updates': 8
+        'disc_updates': 16
 
     }
-    # misc
-    num_transitions = int(1e4)
