@@ -148,6 +148,22 @@ class BenchMarkTest(unittest.TestCase):
                             fake_agent_classification(agents[i], disc_func, temp_agents, temp_labels,
                                                       Config.env_action_space_size, self.venv, Config.num_transitions,
                                                       plot_function=plot_distribution, save_path=path)
+            for k in range(num_agents):
+                temp_labels = labels + [labels[k], "Expert"]
+                temp_agents = fakes + [agents[k], self.expert]
+                path = save_dir + "confidence_mean_plot_disc_" + str(n_disc) + "disc_setting_agent_NONE_agent" \
+                       + agents_label[k] + ".png"
+                fake_agent_classification(None, disc_func, temp_agents, temp_labels,
+                                          Config.env_action_space_size, self.venv, Config.num_transitions,
+                                          plot_function=plot_bar_mean, agent_color='r', save_path=path)
+                if k in distribution_agents_index:
+                    temp_labels = [temp_labels[k], "Expert"]
+                    temp_agents = [agents[k], self.expert]
+                    path = save_dir + "confidence_distribution_plot_disc" + str(n_disc) + "disc_setting_agent_NONE_agent"\
+                           + agents_label[k] + ".png"
+                    fake_agent_classification(None, disc_func, temp_agents, temp_labels,
+                                              Config.env_action_space_size, self.venv, Config.num_transitions,
+                                              plot_function=plot_distribution, save_path=path)
 
 
 if __name__ == '__main__':

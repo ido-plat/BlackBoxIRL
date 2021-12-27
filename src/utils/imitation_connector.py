@@ -12,9 +12,6 @@ def to_im_traj(arr):
 
 
 def discriminator_conversion(disc, agent, action_space_size, def_device='cuda:0'):
-    if not agent:
-        raise ValueError('Agent sent to disc as reference must not be noise!')
-
     def f(states, actions, next_states, done) -> Union[th.Tensor, np.ndarray]:
         was_np = isinstance(states, np.ndarray)
         if was_np:
@@ -35,6 +32,8 @@ def discriminator_conversion(disc, agent, action_space_size, def_device='cuda:0'
 
 
 def log_prob_calc(states, actions, agent, action_space_size, def_device='cuda:0'):
+    if not agent:
+        return 0
     if isinstance(agent.policy, ActorCriticPolicy):
         _, log_prob, _ = agent.policy.evaluate_actions(states.to(def_device), actions.to(def_device))
     else:

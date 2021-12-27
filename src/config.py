@@ -8,7 +8,7 @@ from src.alogirhms.airl import airl
 class Config:
     # misc
     num_transitions = int(2e5)
-    in_lab = False
+    in_lab = True
     # env configs
     env = 'LunarLander-v2'
     env_action_space_size = 4
@@ -66,6 +66,6 @@ class Config:
         'policy_training_steps': airl_model_training_steps,
         'total_timesteps': airl_iterations * airl_model_training_steps,
         "allow_variable_horizon": env_max_timestep is not np.inf,
-        'disc_updates': 16
+        'disc_updates': 8
 
     }
