@@ -62,9 +62,8 @@ def generate_fake_agents(venv, algos: List, num_agents_per_algo, algo_kwargs: Li
     return model_list
 
 
-def create_stopping_points(num_points, min_avg, max_avg):
+def generate_plot(venv, disc_function, agents, labels, disc_function_setting_point, save_path):
     pass
-
 
 def generate_agent(venv, algo, algo_kwards, stopping_point, model_path, max_timestep):
     venv.reset()

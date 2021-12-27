@@ -9,34 +9,24 @@ from stable_baselines3 import DQN, A2C, PPO
 from imitation.rewards.reward_wrapper import *
 
 
-def check_reward_distribution(agent, alg, venv, num_traj, plot_hist=False, norm=True, args=None, test_num_traj=0,
-                              test_agent=None):
-    if not args:
-        args = {}
-    if test_num_traj == 0:
-        test_num_traj = num_traj
-    if not test_agent:
-        test_agent = agent
-
+def check_reward_distribution(agent, reward_func, venv, num_traj, plot_hist=False, num_bins=None, xlim=None):
+    if not num_bins:
+        num_bins = int(np.sqrt(num_traj))
     traj = flatten_trajectories_with_rew(generate_trajectories(agent, venv, make_min_timesteps(num_traj)))
-    test_traj = flatten_trajectories_with_rew(generate_trajectories(test_agent, venv, make_min_timesteps(test_num_traj)))
-
-    print('created trajectories')
-    reward_func = alg(traj, venv, **args)
-    real_reward = test_traj.rews
-    fake_reward = reward_func(test_traj.obs, test_traj.acts, test_traj.next_obs, test_traj.dones)
-    print('real reward shape: ' + str(real_reward.shape))
-    print('fake reward shape: ' + str(fake_reward.shape))
+    real_reward = traj.rews
+    fake_reward = reward_func(traj.obs, traj.acts, traj.next_obs, traj.dones)
+    n_real = real_reward - real_reward.mean()
+    n_fake = fake_reward - fake_reward.mean()
+    diff = np.abs(n_fake - n_real)
     if plot_hist:
-        plt.hist(fake_reward, label='fake rewards')
-        plt.hist(real_reward, label='real rewards')
+        plt.hist(fake_reward, bins=num_bins, alpha=0.5,  label='Fake rewards')
+        plt.hist(real_reward, bins=num_bins, alpha=0.5, label='Real rewards')
+        plt.hist(diff, bins=num_bins, alpha=0.5, label='Difference')
+        if xlim:
+            plt.xlim(xlim)
         plt.legend()
         plt.show()
-
-    if norm:
-        real_reward = real_reward - real_reward.mean()
-        fake_reward = fake_reward - fake_reward.mean()
-    return real_reward, fake_reward
+    return real_reward, fake_reward, diff
 
 
 def train_agent_learnt_reward(samples, venv, model_type, learning_time_step, save_model_path=None, model_arg=None,
@@ -63,6 +53,10 @@ def train_agent_learnt_reward(samples, venv, model_type, learning_time_step, sav
 
 
 def get_agent_avg_reward(agent, venv, num_samples):
+    if isinstance(agent, list):
+        rewards = [flatten_trajectories_with_rew(generate_trajectories(a, venv, make_min_timesteps(num_samples))).rews.mean()
+                   for a in agent]
+        return rewards
     traj = flatten_trajectories_with_rew(generate_trajectories(agent, venv, make_min_timesteps(num_samples)))
     return traj.rews.mean()
 

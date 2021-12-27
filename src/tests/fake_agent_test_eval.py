@@ -23,7 +23,7 @@ class FakeAgentTestEval(unittest.TestCase):
                                                 n_envs=Config.num_env)
         else:
             self.venv = make_vec_env(Config.env, Config.num_env)
-        self.co = Config.expert_custom_objects if Config.in_lab else None
+        self.co = Config.expert_custom_objects
         self.expert = Config.expert_training_algo.load(Config.expert_path, self.venv, custom_objects=self.co)
         self.noise = None
         self.algo_list = [DQN, PPO]
@@ -47,17 +47,21 @@ class FakeAgentTestEval(unittest.TestCase):
                              stopping_points, max_timestep=pow(2, 17))
 
     def test_fake_agent_eval(self):
-        agent_path = 'data/agents/our_agents/LunarLander-v2_fake_agent1'
+        agent_path = 'data/agents/our_agents/LunarLander-v2_agent1'
         disc_func_path = 'data/disc_functions/disc_func2'
-        disc_setting_agent_path = 'data/agents/our_agents/LunarLander-v2_fake_agent2'
+        disc_setting_agent_path = 'data/agents/our_agents/LunarLander-v2_agent2'
+        iagent_path = 'data/iagents/LunarLander-v2_iterative_agent2'
         fakes_path = [self.save_dictionary_path + path for path in os.listdir(self.save_dictionary_path)]
         disc_func = load_disc_func(disc_func_path)
+        iagent = Config.iterative_agent_training_algo.load(iagent_path, self.venv, custom_objects=self.co)
         agent = Config.agent_training_algo.load(agent_path, self.venv, custom_objects=self.co)
-        disc_setting_agent = Config.agent_training_algo.load(disc_setting_agent_path, self.venv)
+        disc_setting_agent = Config.agent_training_algo.load(disc_setting_agent_path, self.venv, custom_objects=self.co)
         fakes = [self._path_to_algo(path).load(path, self.venv, custom_objects=self.co) for path in fakes_path]
         labels = [self._path_to_label(path) for path in fakes_path]
+        fakes.append(iagent)
         fakes.append(agent)
         fakes.append(self.expert)
+        labels.append('Iterative agent')
         labels.append('Real Agent')
         labels.append('Expert')
         fake_agent_classification(disc_setting_agent, disc_func, fakes, labels, Config.env_action_space_size, self.venv,
@@ -79,3 +83,10 @@ class FakeAgentTestEval(unittest.TestCase):
             if agent.__name__ in string:
                 return agent
         raise ValueError('%s Did not contain known algorithm' % string)
+def generate_fake_list():
+    t = FakeAgentTestEval()
+    t.setUp()
+    fakes_path = [t.save_dictionary_path + path for path in os.listdir(t.save_dictionary_path)]
+    fakes = [t._path_to_algo(path).load(path, t.venv, custom_objects=t.co) for path in fakes_path]
+    labels = [t._path_to_label(path) for path in fakes_path]
+    return fakes, labels

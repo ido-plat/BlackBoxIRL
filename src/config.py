@@ -7,8 +7,8 @@ from src.alogirhms.airl import airl
 
 class Config:
     # misc
-    num_transitions = int(1e7)
-    in_lab = True
+    num_transitions = int(2e5)
+    in_lab = False
     # env configs
     env = 'LunarLander-v2'
     env_action_space_size = 4
@@ -20,9 +20,10 @@ class Config:
     expert_custom_objects = {
         "learning_rate": lambda x: .003,
         "clip_range": lambda x: .02
-    } if in_lab else None  # need to sync python 3.8 and 3.7
+    }   # if in_lab else None  # need to sync python 3.8 and 3.7
     # agent configs
     agent_training_algo = DQN
+    iterative_agent_training_algo = PPO
     model_total_training_steps = int(pow(2, 17))
     all_model_training_args = {
         DQN: {
@@ -57,9 +58,10 @@ class Config:
     model_training_args = all_model_training_args[agent_training_algo]
 
     # airl configs
+    airl_num_transitions = int(1e7)
     irl_alo = airl
     airl_iterations = 1000
-    airl_model_training_steps = int(pow(2, 15))
+    airl_model_training_steps = int(pow(2, 16))
     airl_args = {
         'policy_training_steps': airl_model_training_steps,
         'total_timesteps': airl_iterations * airl_model_training_steps,
