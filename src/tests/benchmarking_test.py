@@ -86,19 +86,21 @@ class BenchMarkTest(unittest.TestCase):
         generate_trajectory_footage(agent, self.venv, gif_path)
 
     def test_partial_pipelie(self):
-        agent_path = 'data/agents/our_agents/LunarLander-v2_fake_agent1.zip'
-        agent2_path = 'data/agents/our_agents/LunarLander-v2_fake_agent2.zip'
-        iagent_path = 'data/iagents/LunarLander-v2_iterative_agent2.zip'
-        disc_func_path = 'data/disc_functions/disc_func1'
-        disc_func2_path = 'data/disc_functions/disc_func2'
-
-        agent = Config.agent_training_algo.load(agent_path, self.venv, custom_objects=Config.expert_custom_objects)
-        agent2 = Config.agent_training_algo.load(agent2_path, self.venv, custom_objects=Config.expert_custom_objects)
-        iagent = Config.iterative_agent_training_algo.load(iagent_path, self.venv,
-                                                           custom_objects=Config.expert_custom_objects)
-        fake_agent_classification(agent2, load_disc_func(disc_func_path), [agent, self.expert, iagent],
-                                  ['Agent', 'Expert', 'iterative agent'], Config.env_action_space_size,
-                                  self.venv, Config.num_transitions)
+        print("starting partial pipeline")
+        agent1_save_path = 'data/agents/our_agents/LunarLander-v2_agent1'
+        agent2_save_path = 'data/agents/our_agents/LunarLander-v2_agent2'
+        iagent1_save_path = 'data/iagents/LunarLander-v2_iterative_agent1'
+        iagent2_save_path = 'data/iagents/LunarLander-v2_iterative_agent2'
+        disc1_save_path = 'data/disc_functions/disc_func1'
+        disc2_save_path = 'data/disc_functions/disc_func2'
+        save_dir = 'src/data/result_plots/' # todo abs path
+        agent_list_path = [agent1_save_path, agent2_save_path, iagent1_save_path, iagent2_save_path]
+        label_list = ["Agent1", "Agent2", "Iagent1", "Iagent2"]
+        algo_list = [Config.agent_training_algo, Config.agent_training_algo, Config.iterative_agent_training_algo,
+                     Config.iterative_agent_training_algo]
+        disc_func_lst = [disc1_save_path, disc2_save_path]
+        interesting_agents = [0, 1]
+        self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents)
 
     def test_full_pipeline(self):
         print("starting full pipeline")
@@ -139,7 +141,9 @@ class BenchMarkTest(unittest.TestCase):
                                agents_label[i] + "_agent" + agents_label[k] + ".png"
                         fake_agent_classification(agents[i], disc_func, temp_agents, temp_labels,
                                                   Config.env_action_space_size, self.venv, Config.num_transitions,
-                                                  plot_function=plot_bar_mean, agent_color='r', save_path=path)
+                                                  plot_function=plot_bar_mean, agent_color='r', save_path=path,
+                                                  print_assesement=False)
+                        print('finished creating ' + path)
                         if k in distribution_agents_index:
                             temp_labels = [temp_labels[i], temp_labels[k], "Expert"]
                             temp_agents = [agents[i], agents[k], self.expert]
@@ -147,7 +151,9 @@ class BenchMarkTest(unittest.TestCase):
                                    agents_label[i] + "_agent" + agents_label[k] + ".png"
                             fake_agent_classification(agents[i], disc_func, temp_agents, temp_labels,
                                                       Config.env_action_space_size, self.venv, Config.num_transitions,
-                                                      plot_function=plot_distribution, save_path=path)
+                                                      plot_function=plot_distribution, save_path=path,
+                                                      print_assesement=False)
+                            print('finished creating ' + path)
             for k in range(num_agents):
                 temp_labels = labels + [labels[k], "Expert"]
                 temp_agents = fakes + [agents[k], self.expert]
@@ -155,7 +161,9 @@ class BenchMarkTest(unittest.TestCase):
                        + agents_label[k] + ".png"
                 fake_agent_classification(None, disc_func, temp_agents, temp_labels,
                                           Config.env_action_space_size, self.venv, Config.num_transitions,
-                                          plot_function=plot_bar_mean, agent_color='r', save_path=path)
+                                          plot_function=plot_bar_mean, agent_color='r', save_path=path,
+                                          print_assesement=False)
+                print('finished creating ' + path)
                 if k in distribution_agents_index:
                     temp_labels = [temp_labels[k], "Expert"]
                     temp_agents = [agents[k], self.expert]
@@ -163,9 +171,21 @@ class BenchMarkTest(unittest.TestCase):
                            + agents_label[k] + ".png"
                     fake_agent_classification(None, disc_func, temp_agents, temp_labels,
                                               Config.env_action_space_size, self.venv, Config.num_transitions,
-                                              plot_function=plot_distribution, save_path=path)
+                                              plot_function=plot_distribution, save_path=path,
+                                              print_assesement=False)
+                    print('finished creating ' + path)
 
-
+    # def test_save_fig(self):
+    #     disc_path = 'data/disc_functions/disc_func1'
+    #     disc_func = load_disc_func(disc_path)
+    #     save_dir = 'C:/Users/97250/PycharmProjects/BlackBoxIRL/src/tests/temp/'
+    #     temp_labels = ["Expert"]
+    #     temp_agents = [self.expert]
+    #     path = save_dir + "save_fig_Test"
+    #     fake_agent_classification(None, disc_func, temp_agents, temp_labels,
+    #                               Config.env_action_space_size, self.venv, Config.num_transitions,
+    #                               plot_function=plot_distribution, save_path=path,
+    #                               print_assesement=False)
 if __name__ == '__main__':
     t = BenchMarkTest()
     t.test_full_pipeline()
