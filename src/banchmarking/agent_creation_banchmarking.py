@@ -10,14 +10,16 @@ from stable_baselines3.common.callbacks import StopTrainingOnRewardThreshold, Ev
 
 
 def fake_agent_classification(agent, disc_func, agents_to_asses: Sequence, labels: Sequence, action_space_size,
-                              venv, num_trajectories, show=True, plot_function=None, **plot_kwarg):
+                              venv, num_trajectories, show=True, plot_function=None, print_assesement=True,
+                              **plot_kwarg):
 
     assert len(agents_to_asses) == len(labels)
     confidences = []
     for i, assessed_agent in enumerate(agents_to_asses):
         traj = flatten_trajectories_with_rew(generate_trajectories(assessed_agent, venv, make_min_timesteps(num_trajectories)))
         confidences.append(traj_confidence(traj, disc_func, agent, action_space_size))
-        print('finished assessing ' + str(labels[i]) + ' - avg confidence: ' + str(confidences[i].mean()))
+        if print_assesement:
+            print('finished assessing ' + str(labels[i]) + ' - avg confidence: ' + str(confidences[i].mean()))
     if not show:
         return confidences
     if not plot_function:
@@ -34,11 +36,8 @@ def traj_confidence(samples: Transitions, disc_func, agent, action_space_size):
 
 def eval_single_traj(venv, agent, action_space_size, save_path=None, samples=None, discriminator=None, args_for_airl=None,
                      plot_confidence_hist=False):
-    if not discriminator:
-        if not samples:
-            raise ValueError("Pass samples if there's no discriminator!!!")
-        _, disc_func = airl(samples, venv, return_disc=True, **args_for_airl)
-        discriminator = discriminator_conversion(disc_func, agent, action_space_size)
+    if not discriminator or not samples:
+        raise ValueError("Give disc function and samples for eval")
     past_obs, action, next_obs, dones, _ = generate_trajectory_footage(agent, venv, save_path)
     confidence = discriminator(past_obs, action, next_obs, dones)
     if plot_confidence_hist:
@@ -61,9 +60,6 @@ def generate_fake_agents(venv, algos: List, num_agents_per_algo, algo_kwargs: Li
             curr_agent = curr_agent + 1
     return model_list
 
-
-def generate_plot(venv, disc_function, agents, labels, disc_function_setting_point, save_path):
-    pass
 
 def generate_agent(venv, algo, algo_kwards, stopping_point, model_path, max_timestep):
     venv.reset()
