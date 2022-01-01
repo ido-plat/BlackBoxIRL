@@ -135,7 +135,7 @@ class BenchMarkTest(unittest.TestCase):
             for i in range(num_agents):
                 for k in range(num_agents):
                     if i != k:
-                        temp_labels = labels + [labels[k], "Expert"]
+                        temp_labels = labels + [agents_label[k], "Expert"]
                         temp_agents = fakes + [agents[k], self.expert]
                         path = save_dir + "confidence_mean_plot_disc_" + str(n_disc) + "disc_setting_agent_" +\
                                agents_label[i] + "_agent" + agents_label[k] + ".png"
@@ -145,7 +145,7 @@ class BenchMarkTest(unittest.TestCase):
                                                   print_assesement=False)
                         print('finished creating ' + path)
                         if k in distribution_agents_index:
-                            temp_labels = [temp_labels[i], temp_labels[k], "Expert"]
+                            temp_labels = [agents_label[i], agents_label[k], "Expert"]
                             temp_agents = [agents[i], agents[k], self.expert]
                             path = save_dir + "confidence_distribution_plot_disc" + str(n_disc) + "disc_setting_agent_" + \
                                    agents_label[i] + "_agent" + agents_label[k] + ".png"
@@ -155,7 +155,7 @@ class BenchMarkTest(unittest.TestCase):
                                                       print_assesement=False)
                             print('finished creating ' + path)
             for k in range(num_agents):
-                temp_labels = labels + [labels[k], "Expert"]
+                temp_labels = labels + [agents_label[k], "Expert"]
                 temp_agents = fakes + [agents[k], self.expert]
                 path = save_dir + "confidence_mean_plot_disc_" + str(n_disc) + "disc_setting_agent_NONE_agent" \
                        + agents_label[k] + ".png"
@@ -165,7 +165,7 @@ class BenchMarkTest(unittest.TestCase):
                                           print_assesement=False)
                 print('finished creating ' + path)
                 if k in distribution_agents_index:
-                    temp_labels = [temp_labels[k], "Expert"]
+                    temp_labels = [agents_label[k], "Expert"]
                     temp_agents = [agents[k], self.expert]
                     path = save_dir + "confidence_distribution_plot_disc" + str(n_disc) + "disc_setting_agent_NONE_agent"\
                            + agents_label[k] + ".png"
