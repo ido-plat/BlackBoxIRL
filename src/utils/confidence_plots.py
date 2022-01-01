@@ -31,6 +31,7 @@ def plot_distribution(confidences, labels, num_bins=100, label_size=20, save_pat
     bins = np.linspace(0, 1, num_bins)
     for i, confidence in enumerate(confidences):
         plt.hist(confidence, alpha=0.5, bins=bins, label=labels[i], density=True)
+    plt.figure()
     plt.legend()
     plt.xticks(fontsize=label_size)
     plt.xlabel('Confidence', fontsize=label_size + 2)
@@ -39,12 +40,13 @@ def plot_distribution(confidences, labels, num_bins=100, label_size=20, save_pat
         plt.savefig(save_path)
     else:
         plt.show()
-        plt.clf()
+    plt.close()
     return confidences
 
 
 def plot_bar_mean(confidences, labels, font_size=10, agent_color=None, expert_color=None, agent_id=-2, expert_id=-1,
                   save_path=None):
+
     fig, ax = plt.subplots(figsize=(16, 9))
     ax.xaxis.set_label_text('Confidence', fontsize=font_size + 5)
     bars = ax.barh(labels, [round(conf.mean(), 4) for conf in confidences])
@@ -79,10 +81,10 @@ def plot_bar_mean(confidences, labels, font_size=10, agent_color=None, expert_co
     ax.set_title('Mean Confidence Plot', loc='center', fontsize=font_size+10)
     if save_path:
         plt.savefig(save_path)
-        plt.clf()
+
     else:
         plt.show()
-
+    plt.close()
 
 def _is_tformed(confidences):
     return isinstance(confidences[0], list)
