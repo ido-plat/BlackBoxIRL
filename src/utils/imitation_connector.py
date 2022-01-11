@@ -32,8 +32,8 @@ def discriminator_conversion(disc, agent, action_space_size, def_device='cuda:0'
 
 
 def log_prob_calc(states, actions, agent, action_space_size, def_device='cuda:0'):
-    if not agent:
-        return 0
+    if not agent:   # setting point to uniform
+        return np.log(1/action_space_size)
     if isinstance(agent.policy, ActorCriticPolicy):
         _, log_prob, _ = agent.policy.evaluate_actions(states.to(def_device), actions.to(def_device))
     else:

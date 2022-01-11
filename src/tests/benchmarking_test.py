@@ -7,16 +7,20 @@ from stable_baselines3 import DQN, A2C, PPO
 from imitation.algorithms.density import DensityType
 from src.alogirhms.airl import *
 from src.utils.agent_utils import generate_trajectory_footage
-from src.utils.env_utils import make_fixed_horizon_venv, make_vec_env
+from src.utils.env_utils import SpaceInvadersEnv
 from src.config import Config
 from src.tests.fake_agent_test_eval import generate_fake_list
 from src.utils.confidence_plots import *
+
+
 class BenchMarkTest(unittest.TestCase):
     def setUp(self) -> None:
-        if Config.env_max_timestep is not np.inf:
-            self.venv = make_fixed_horizon_venv(Config.env, max_episode_steps=Config.env_max_timestep, n_envs=Config.num_env)
-        else:
-            self.venv = make_vec_env(Config.env, Config.num_env)
+        # if Config.env_max_timestep is not np.inf:
+        #     self.venv = make_fixed_horizon_venv(Config.env, max_episode_steps=Config.env_max_timestep, n_envs=Config.num_env)
+        # else:
+        #     self.venv = make_vec_env(Config.env, Config.num_env)
+        venv_generator = SpaceInvadersEnv(Config.env, Config.num_env, None, Config.env_max_timestep, True)
+        self.venv = venv_generator.make_venv()
         self.expert = Config.expert_training_algo.load(Config.expert_path, self.venv,
                                                        custom_objects=Config.expert_custom_objects)
         self.noise = None
@@ -104,34 +108,35 @@ class BenchMarkTest(unittest.TestCase):
 
     def test_full_pipeline(self):
         print("starting full pipeline")
-        agent1_save_path = 'data/agents/our_agents/LunarLander-v2_agent1'
-        agent2_save_path = 'data/agents/our_agents/LunarLander-v2_agent2'
-        iagent1_save_path = 'data/iagents/LunarLander-v2_iterative_agent1'
-        iagent2_save_path = 'data/iagents/LunarLander-v2_iterative_agent2'
-        reward1_func_path = 'data/reward_functions/LunarLander-v2_reward_func1'
-        reward2_func_path = 'data/reward_functions/LunarLander-v2_reward_func2'
-        disc1_save_path = 'data/disc_functions/disc_func1'
-        disc2_save_path = 'data/disc_functions/disc_func2'
+        agent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/LunarLander-v2_agent1'
+        agent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/LunarLander-v2_agent2'
+        iagent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/LunarLander-v2_iterative_agent1'
+        iagent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/LunarLander-v2_iterative_agent2'
+        reward1_func_path = 'data/SpaceInvadersNoFrameskip-v4/reward_functions/LunarLander-v2_reward_func1'
+        reward2_func_path = 'data/SpaceInvadersNoFrameskip-v4/reward_functions/LunarLander-v2_reward_func2'
+        disc1_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func1'
+        disc2_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func2'
         self.fake_agent_creation(agent1_save_path, disc1_save_path, iagent1_save_path, reward1_func_path)
         print('finished creating first agent, starting second')
         self.fake_agent_creation(agent2_save_path, disc2_save_path, iagent2_save_path, reward2_func_path)
         #                                  finished pipline, creating result visualisation
-        save_dir = 'src/data/result_plots/'
+        save_dir = 'src/data/result_plots/' #   todo full path
         agent_list_path = [agent1_save_path, agent2_save_path, iagent1_save_path, iagent2_save_path]
         label_list = ["Agent1", "Agent2", "Iagent1", "Iagent2"]
         algo_list = [Config.agent_training_algo, Config.agent_training_algo, Config.iterative_agent_training_algo,
                      Config.iterative_agent_training_algo]
         disc_func_lst = [disc1_save_path, disc2_save_path]
         interesting_agents = [0, 1]
-        self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents)
+        self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents,
+                              False)
 
     def _analyze_results(self, agents_path, agents_label, algo_list, disc_function_path_list, save_dir,
-                         distribution_agents_index):
+                         distribution_agents_index, use_fakes=True):
         num_agents = len(agents_path)
         agents = [algo_list[i].load(agents_path[i]) for i in range(num_agents)]
         for n_disc, disc_function_path in enumerate(disc_function_path_list):
             disc_func = load_disc_func(disc_function_path)
-            fakes, labels = generate_fake_list()
+            fakes, labels = generate_fake_list() if use_fakes else [], []
             for i in range(num_agents):
                 for k in range(num_agents):
                     if i != k:
