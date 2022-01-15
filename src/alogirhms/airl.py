@@ -12,7 +12,6 @@ def airl(samples, venv, policy_training_steps_for_iteration, total_timesteps, ia
          ):
     if isinstance(samples, np.ndarray):
         raise ValueError('give transitions to airl - not np array')
-    print(f"AM AT AIRL WITH ALLOW VAR HORIZON {allow_variable_horizon}")
     airl_trainer = im_airl.AIRL(
         venv=venv,
         demonstrations=samples,
