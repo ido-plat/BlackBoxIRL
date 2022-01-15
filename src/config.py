@@ -1,6 +1,6 @@
 
 import numpy as np
-
+import tables as tb
 from stable_baselines3 import DQN, A2C, PPO
 from src.alogirhms.airl import airl
 
@@ -9,11 +9,21 @@ class Config:
     # misc
     num_transitions = int(2e5)
     in_lab = False
+    use_db = True
     # env configs
     env = 'SpaceInvadersNoFrameskip-v4'
     env_action_space_size = 6
     num_env = 1
     env_max_timestep = np.inf
+    env_obs_shape = (4, 84, 84)
+    env_action_shape = ()
+    env_dones_shape = ()
+    env_obs_dtype = tb.UInt8Col
+    env_act_dtype = tb.Int64Col
+    env_dones_dtype = tb.BoolCol
+    # db configs
+    batch_size = 1024
+    maximum_batches_in_memory = 10
 
     # expert configs
     expert_path = 'data/SpaceInvadersNoFrameskip-v4/agents/SpaceInvadersNoFrameskip-v4_DQN_Expert.zip'
@@ -88,13 +98,14 @@ class Config:
 
     # airl configs
     irl_alo = airl
-    airl_num_transitions = int(1e7)
+    airl_num_transitions = batch_size * 1000    # roughly int(1e7)
     airl_iterations = 5000
     airl_model_training_steps = int(pow(2, 10))
     airl_args = {
+        'batch_size': batch_size,
         'policy_training_steps_for_iteration': airl_model_training_steps,
         'total_timesteps': airl_iterations * airl_model_training_steps,
-        "allow_variable_horizon": env_max_timestep is not np.inf,
+        "allow_variable_horizon": env_max_timestep is np.inf,
         'disc_updates': 8,
         'iagent_args': all_model_training_args[env][iterative_agent_training_algo]
     }

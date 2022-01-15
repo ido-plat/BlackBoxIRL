@@ -37,7 +37,7 @@ class BenchMarkTest(unittest.TestCase):
         return traj
 
     def test_plot_duration(self):
-        big_num = 1
+        big_num = 100
         n_bins = 10
         lens = self.get_expert_traj_len(big_num)
         plt.hist(np.array(lens), n_bins)

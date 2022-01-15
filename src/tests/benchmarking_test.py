@@ -11,7 +11,7 @@ from src.utils.env_utils import SpaceInvadersEnv
 from src.config import Config
 from src.tests.fake_agent_test_eval import generate_fake_list
 from src.utils.confidence_plots import *
-
+from src.transitions.db_transitions import make_db_using_config, TransitionsDB
 
 class BenchMarkTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -43,16 +43,18 @@ class BenchMarkTest(unittest.TestCase):
         # plt.hist(act)
         # plt.show()
 
-    def fake_agent_creation(self, save_agent_path, save_disc_func_path, save_iterated_agent_path, save_reward_function):
+    def fake_agent_creation(self, save_agent_path, save_disc_func_path, save_iterated_agent_path, save_reward_function,
+                            use_db, db_filename='', rewrite_db_file=False):
         config = Config
         agent_training_alg = config.agent_training_algo
         airl_arg = config.airl_args.copy()
         airl_arg['save_disc_path'] = save_disc_func_path
         airl_arg['save_reward_func_path'] = save_reward_function
         airl_arg['save_iagent_path'] = save_iterated_agent_path
-        samples1 = flatten_trajectories_with_rew(generate_trajectories(self.expert, self.venv, make_min_timesteps(config.airl_num_transitions)))
+        samples = make_db_using_config(db_filename, rewrite_db_file, self.expert, self.venv) if use_db else \
+                  flatten_trajectories_with_rew(generate_trajectories(self.expert, self.venv, make_min_timesteps(config.airl_num_transitions)))
         print('generated samples')
-        train_agent_learnt_reward(samples1, self.venv, agent_training_alg,
+        train_agent_learnt_reward(samples, self.venv, agent_training_alg,
                                   learning_time_step=config.model_total_training_steps,
                                   model_arg=config.model_training_args, save_model_path=save_agent_path,
                                   return_disc=True, airl_args=airl_arg)
@@ -116,19 +118,21 @@ class BenchMarkTest(unittest.TestCase):
         reward2_func_path = 'data/SpaceInvadersNoFrameskip-v4/reward_functions/LunarLander-v2_reward_func2'
         disc1_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func1'
         disc2_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func2'
-        self.fake_agent_creation(agent1_save_path, disc1_save_path, iagent1_save_path, reward1_func_path)
+        db_file1 = 'data/SpaceInvadersNoFrameskip-v4/transitions_db/DB1_SpaceInvadersNoFrameskip-v4.h5'
+        db_file2 = 'data/SpaceInvadersNoFrameskip-v4/transitions_db/DB2_SpaceInvadersNoFrameskip-v4.h5'
+        self.fake_agent_creation(agent1_save_path, disc1_save_path, iagent1_save_path, reward1_func_path, Config.use_db, db_file1, True)
         print('finished creating first agent, starting second')
-        self.fake_agent_creation(agent2_save_path, disc2_save_path, iagent2_save_path, reward2_func_path)
+        self.fake_agent_creation(agent2_save_path, disc2_save_path, iagent2_save_path, reward2_func_path, Config.use_db, db_file2, True)
         #                                  finished pipline, creating result visualisation
-        save_dir = 'src/data/result_plots/' #   todo full path
-        agent_list_path = [agent1_save_path, agent2_save_path, iagent1_save_path, iagent2_save_path]
-        label_list = ["Agent1", "Agent2", "Iagent1", "Iagent2"]
-        algo_list = [Config.agent_training_algo, Config.agent_training_algo, Config.iterative_agent_training_algo,
-                     Config.iterative_agent_training_algo]
-        disc_func_lst = [disc1_save_path, disc2_save_path]
-        interesting_agents = [0, 1]
-        self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents,
-                              False)
+        # save_dir = 'src/data/result_plots/' #   todo full path
+        # agent_list_path = [agent1_save_path, agent2_save_path, iagent1_save_path, iagent2_save_path]
+        # label_list = ["Agent1", "Agent2", "Iagent1", "Iagent2"]
+        # algo_list = [Config.agent_training_algo, Config.agent_training_algo, Config.iterative_agent_training_algo,
+        #              Config.iterative_agent_training_algo]
+        # disc_func_lst = [disc1_save_path, disc2_save_path]
+        # interesting_agents = [0, 1]
+        # self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents,
+        #                       False)
 
     def _analyze_results(self, agents_path, agents_label, algo_list, disc_function_path_list, save_dir,
                          distribution_agents_index, use_fakes=True):
