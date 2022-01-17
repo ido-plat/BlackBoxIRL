@@ -60,22 +60,25 @@ class BenchMarkTest(unittest.TestCase):
                                   return_disc=True, airl_args=airl_arg)
 
     def test_compare_expart_agent_noise(self):
-        agent_path = 'data/agents/our_agents/LunarLander-v2_agent1.zip'
-        agent2_path = 'data/agents/our_agents/LunarLander-v2_agent1.zip'
-        iagent1_path = 'data/iagents/LunarLander-v2_iterative_agent1.zip'
-        iagent2_path = 'data/iagents/LunarLander-v2_iterative_agent2.zip'
+        agent_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent1.zip'
+        agent2_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent2.zip'
+        iagent1_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent1.zip'
+        iagent2_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent2.zip'
+        expert_path = 'data/SpaceInvadersNoFrameskip-v4/agents/SpaceInvadersNoFrameskip-v4_DQN_Expert.zip'
         agent = Config.agent_training_algo.load(agent_path, self.venv, custom_objects=Config.expert_custom_objects)
         agent2 = Config.agent_training_algo.load(agent2_path, self.venv, custom_objects=Config.expert_custom_objects)
+        expert = Config.expert_training_algo.load(expert_path, self.venv, custom_objects=Config.expert_custom_objects)
         iagent = Config.iterative_agent_training_algo.load(iagent1_path, self.venv,
                                                            custom_objects=Config.expert_custom_objects)
         iagent2 = Config.iterative_agent_training_algo.load(iagent2_path, self.venv,
                                                            custom_objects=Config.expert_custom_objects)
-        agents = [agent, agent2, iagent, iagent2]
-        labels = ["Agent 1", 'Agent 2', 'Iagent 1', "Iagent 2"]
+        agents = [expert, self.noise, agent, agent2, iagent, iagent2]
+        labels = ["expert", "noise", "Agent 1", 'Agent 2', 'Iagent 1', "Iagent 2"]
+        f = open('src/tests/temp/rewards.txt', 'w')
         for a, l in zip(agents, labels):
             reward = get_agent_avg_reward(a, self.venv, Config.num_transitions)
-            print(l + ' mean reward ' + str(reward))
-
+            print(l + ' mean reward ' + str(reward), file=f)
+        f.close()
 
     def test_train_model(self):
         config = Config
@@ -93,13 +96,13 @@ class BenchMarkTest(unittest.TestCase):
 
     def test_partial_pipelie(self):
         print("starting partial pipeline")
-        agent1_save_path = 'data/agents/our_agents/LunarLander-v2_agent1'
-        agent2_save_path = 'data/agents/our_agents/LunarLander-v2_agent2'
-        iagent1_save_path = 'data/iagents/LunarLander-v2_iterative_agent1'
-        iagent2_save_path = 'data/iagents/LunarLander-v2_iterative_agent2'
-        disc1_save_path = 'data/disc_functions/disc_func1'
-        disc2_save_path = 'data/disc_functions/disc_func2'
-        save_dir = 'src/data/result_plots/' # todo abs path
+        agent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent1'
+        agent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent2'
+        iagent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent1'
+        iagent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent2'
+        disc1_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func1'
+        disc2_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func2'
+        save_dir = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots' # todo abs path
         agent_list_path = [agent1_save_path, agent2_save_path, iagent1_save_path, iagent2_save_path]
         label_list = ["Agent1", "Agent2", "Iagent1", "Iagent2"]
         algo_list = [Config.agent_training_algo, Config.agent_training_algo, Config.iterative_agent_training_algo,
@@ -110,12 +113,12 @@ class BenchMarkTest(unittest.TestCase):
 
     def test_full_pipeline(self):
         print("starting full pipeline")
-        agent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/LunarLander-v2_agent1'
-        agent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/LunarLander-v2_agent2'
-        iagent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/LunarLander-v2_iterative_agent1'
-        iagent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/LunarLander-v2_iterative_agent2'
-        reward1_func_path = 'data/SpaceInvadersNoFrameskip-v4/reward_functions/LunarLander-v2_reward_func1'
-        reward2_func_path = 'data/SpaceInvadersNoFrameskip-v4/reward_functions/LunarLander-v2_reward_func2'
+        agent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent1'
+        agent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent2'
+        iagent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent1'
+        iagent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent2'
+        reward1_func_path = 'data/SpaceInvadersNoFrameskip-v4/reward_functions/SpaceInvaders-v4_reward_func1'
+        reward2_func_path = 'data/SpaceInvadersNoFrameskip-v4/reward_functions/SpaceInvaders-v4_reward_func2'
         disc1_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func1'
         disc2_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func2'
         db_file1 = 'data/SpaceInvadersNoFrameskip-v4/transitions_db/DB1_SpaceInvadersNoFrameskip-v4.h5'
@@ -140,7 +143,8 @@ class BenchMarkTest(unittest.TestCase):
         agents = [algo_list[i].load(agents_path[i]) for i in range(num_agents)]
         for n_disc, disc_function_path in enumerate(disc_function_path_list):
             disc_func = load_disc_func(disc_function_path)
-            fakes, labels = generate_fake_list() if use_fakes else [], []
+            fakes, labels = generate_fake_list()
+            print(fakes, labels, use_fakes)
             for i in range(num_agents):
                 for k in range(num_agents):
                     if i != k:

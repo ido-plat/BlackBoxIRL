@@ -1,3 +1,5 @@
+import numpy as np
+
 from src.banchmarking.reward_aprox_banchmarking import *
 from src.banchmarking.agent_creation_banchmarking import *
 from src.alogirhms.density_approximate import density_aprox
@@ -23,26 +25,29 @@ class BenchMarkTest(unittest.TestCase):
         if Config.env_max_timestep is not np.inf:
             finite_env_generator = SpaceInvadersEnv(self.env_to_test, Config.num_env, None, Config.env_max_timestep, True)
             self.finite_env = finite_env_generator.make_venv()
+
         endless_env_gen = SpaceInvadersEnv(self.env_to_test, Config.num_env, None, np.inf, True)
         self.normal_venv = endless_env_gen.make_venv()
-        self.expert_path = 'rl-baselines3-zoo/rl-trained-agents/dqn/SpaceInvadersNoFrameskip-v4_1/SpaceInvadersNoFrameskip-v4.zip'
-        self.expert_algo = DQN
-        self.expert = self.expert_algo.load(self.expert_path, self.normal_venv)
+        # self.expert_path = 'rl-baselines3-zoo/rl-trained-agents/dqn/SpaceInvadersNoFrameskip-v4_1/SpaceInvadersNoFrameskip-v4.zip'
+        # self.expert_algo = DQN
+        # self.expert = self.expert_algo.load(self.expert_path, self.normal_venv)
         self.noise = None
 
 
-    def get_expert_traj_len(self, n):
-        traj = [rollout_stats(generate_trajectories(self.expert, self.normal_venv, make_min_episodes(1)))['len_mean'] for _ in trange(n)]
+    def get_agent_traj_len(self, n, agent):
+        traj = [rollout_stats(generate_trajectories(agent, self.normal_venv, make_min_episodes(3)))['len_mean'] for _ in trange(n)]
         print("done generating traj")
         return traj
 
     def test_plot_duration(self):
         big_num = 100
         n_bins = 10
-        lens = self.get_expert_traj_len(big_num)
+        lens = self.get_agent_traj_len(big_num, self.noise)
+        f = open('src/tests/temp/means.txt', 'w')
+        print(np.array(lens).mean(), file=f)
         plt.hist(np.array(lens), n_bins)
+        f.close()
         plt.show()
-        print(len)
 
 def print_make_min_episodes(n: int):
     """Terminate after collecting n episodes of data.

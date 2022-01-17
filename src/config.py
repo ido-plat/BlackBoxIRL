@@ -8,7 +8,7 @@ from src.alogirhms.airl import airl
 class Config:
     # misc
     num_transitions = int(2e5)
-    in_lab = False
+    in_lab = True
     use_db = True
     # env configs
     env = 'SpaceInvadersNoFrameskip-v4'
