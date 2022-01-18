@@ -143,7 +143,7 @@ class BenchMarkTest(unittest.TestCase):
         num_agents = len(agents_path)
         agents = [algo_list[i].load(agents_path[i]) for i in range(num_agents)]
         for n_disc, disc_function_path in enumerate(disc_function_path_list):
-            disc_func = load_disc_func(disc_function_path)
+            disc_func = load_disc_func(disc_function_path, 'cpu')
             fakes, labels = generate_fake_list()
             print(fakes, labels, use_fakes)
             for i in range(num_agents):

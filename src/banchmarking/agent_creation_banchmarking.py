@@ -11,7 +11,7 @@ from stable_baselines3.common.callbacks import StopTrainingOnRewardThreshold, Ev
 
 def fake_agent_classification(agent, disc_func, agents_to_asses: Sequence, labels: Sequence, action_space_size,
                               venv, num_trajectories, show=True, plot_function=None, print_assesement=True,
-                              device='cuda:0', **plot_kwarg):
+                              device='cpu', **plot_kwarg):
 
     assert len(agents_to_asses) == len(labels)
     confidences = []
