@@ -60,7 +60,7 @@ class TransitionsDB(Iterable):
 def make_db_using_config(file_name,  rewrite_file, expert, venv):
     from src.config import Config
     return TransitionsDB(Config.batch_size, Config.airl_num_transitions,
-                         Config.maximum_batches_in_memory * Config.batch_size,file_name, venv, expert,
+                         Config.maximum_batches_in_memory * Config.batch_size, file_name, venv, expert,
                          Config.env_obs_shape, Config.env_obs_dtype, Config.env_action_shape, Config.env_act_dtype,
                          Config.env_dones_shape, Config.env_dones_dtype, rewrite_file)
 

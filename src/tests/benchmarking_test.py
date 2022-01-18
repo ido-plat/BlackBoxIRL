@@ -109,7 +109,8 @@ class BenchMarkTest(unittest.TestCase):
                      Config.iterative_agent_training_algo]
         disc_func_lst = [disc1_save_path, disc2_save_path]
         interesting_agents = [0, 1]
-        self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents)
+        self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents,
+                              device='cpu')
 
     def test_full_pipeline(self):
         print("starting full pipeline")
@@ -138,7 +139,7 @@ class BenchMarkTest(unittest.TestCase):
         #                       False)
 
     def _analyze_results(self, agents_path, agents_label, algo_list, disc_function_path_list, save_dir,
-                         distribution_agents_index, use_fakes=True):
+                         distribution_agents_index, use_fakes=True, device='cuda:0'):
         num_agents = len(agents_path)
         agents = [algo_list[i].load(agents_path[i]) for i in range(num_agents)]
         for n_disc, disc_function_path in enumerate(disc_function_path_list):
@@ -155,7 +156,7 @@ class BenchMarkTest(unittest.TestCase):
                         fake_agent_classification(agents[i], disc_func, temp_agents, temp_labels,
                                                   Config.env_action_space_size, self.venv, Config.num_transitions,
                                                   plot_function=plot_bar_mean, agent_color='r', save_path=path,
-                                                  print_assesement=False)
+                                                  print_assesement=False, device=device)
                         print('finished creating ' + path)
                         if k in distribution_agents_index:
                             temp_labels = [agents_label[i], agents_label[k], "Expert"]
@@ -165,7 +166,7 @@ class BenchMarkTest(unittest.TestCase):
                             fake_agent_classification(agents[i], disc_func, temp_agents, temp_labels,
                                                       Config.env_action_space_size, self.venv, Config.num_transitions,
                                                       plot_function=plot_distribution, save_path=path,
-                                                      print_assesement=False)
+                                                      print_assesement=False, device=device)
                             print('finished creating ' + path)
             for k in range(num_agents):
                 temp_labels = labels + [agents_label[k], "Expert"]
@@ -175,7 +176,7 @@ class BenchMarkTest(unittest.TestCase):
                 fake_agent_classification(None, disc_func, temp_agents, temp_labels,
                                           Config.env_action_space_size, self.venv, Config.num_transitions,
                                           plot_function=plot_bar_mean, agent_color='r', save_path=path,
-                                          print_assesement=False)
+                                          print_assesement=False, device=device)
                 print('finished creating ' + path)
                 if k in distribution_agents_index:
                     temp_labels = [agents_label[k], "Expert"]
@@ -185,7 +186,7 @@ class BenchMarkTest(unittest.TestCase):
                     fake_agent_classification(None, disc_func, temp_agents, temp_labels,
                                               Config.env_action_space_size, self.venv, Config.num_transitions,
                                               plot_function=plot_distribution, save_path=path,
-                                              print_assesement=False)
+                                              print_assesement=False, device=device)
                     print('finished creating ' + path)
 
     # def test_save_fig(self):

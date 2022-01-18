@@ -77,11 +77,9 @@ class FakeAgentTestEval(unittest.TestCase):
     def test_mean_fake_score(self):
         fakes_path = [self.save_dictionary_path + path for path in os.listdir(self.save_dictionary_path)]
         fakes = [self._path_to_algo(path).load(path, self.venv) for path in fakes_path]
-        f = open('src/tests/temp/means.txt', 'w')
         for i in range(len(fakes)):
             avg = get_agent_avg_reward(fakes[i], self.venv, Config.num_transitions)
-            print(self._path_to_label(fakes_path[i]) + ' mean rewards ' + str(avg), file=f)
-        f.close()
+            print(self._path_to_label(fakes_path[i]) + ' mean rewards ' + str(avg))
 
     def _path_to_label(self, string):
         ending = '.zip'

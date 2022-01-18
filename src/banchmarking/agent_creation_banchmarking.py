@@ -11,13 +11,13 @@ from stable_baselines3.common.callbacks import StopTrainingOnRewardThreshold, Ev
 
 def fake_agent_classification(agent, disc_func, agents_to_asses: Sequence, labels: Sequence, action_space_size,
                               venv, num_trajectories, show=True, plot_function=None, print_assesement=True,
-                              **plot_kwarg):
+                              device='cuda:0', **plot_kwarg):
 
     assert len(agents_to_asses) == len(labels)
     confidences = []
     for i, assessed_agent in enumerate(agents_to_asses):
         traj = flatten_trajectories_with_rew(generate_trajectories(assessed_agent, venv, make_min_timesteps(num_trajectories)))
-        confidences.append(traj_confidence(traj, disc_func, agent, action_space_size))
+        confidences.append(traj_confidence(traj, disc_func, agent, action_space_size, device))
         if print_assesement:
             print('finished assessing ' + str(labels[i]) + ' - avg confidence: ' + str(confidences[i].mean()))
     if not show:
@@ -28,8 +28,8 @@ def fake_agent_classification(agent, disc_func, agents_to_asses: Sequence, label
     return confidences
 
 
-def traj_confidence(samples: Transitions, disc_func, agent, action_space_size):
-    discriminator = discriminator_conversion(disc_func, agent, action_space_size)
+def traj_confidence(samples: Transitions, disc_func, agent, action_space_size, device='cuda:0'):
+    discriminator = discriminator_conversion(disc_func, agent, action_space_size, device)
     confidence = discriminator(samples.obs, samples.acts, samples.next_obs, samples.dones)
     return confidence
 
