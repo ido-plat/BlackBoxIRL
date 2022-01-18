@@ -110,7 +110,7 @@ class BenchMarkTest(unittest.TestCase):
         disc_func_lst = [disc1_save_path, disc2_save_path]
         interesting_agents = [0, 1]
         self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents,
-                              device='cpu')
+                              device='cpu', num_chunks=100)
 
     def test_full_pipeline(self):
         print("starting full pipeline")
@@ -139,7 +139,7 @@ class BenchMarkTest(unittest.TestCase):
         #                       False)
 
     def _analyze_results(self, agents_path, agents_label, algo_list, disc_function_path_list, save_dir,
-                         distribution_agents_index, use_fakes=True, device='cuda:0'):
+                         distribution_agents_index, use_fakes=True, device='cuda:0', num_chunks=1):
         num_agents = len(agents_path)
         agents = [algo_list[i].load(agents_path[i]) for i in range(num_agents)]
         for n_disc, disc_function_path in enumerate(disc_function_path_list):
