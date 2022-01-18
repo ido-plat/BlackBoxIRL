@@ -7,17 +7,25 @@ from src.alogirhms.airl import *
 from typing import Sequence, List
 from src.utils.agent_utils import generate_trajectory_footage
 from stable_baselines3.common.callbacks import StopTrainingOnRewardThreshold, EvalCallback
+from math import ceil
+import gc
 
 
 def fake_agent_classification(agent, disc_func, agents_to_asses: Sequence, labels: Sequence, action_space_size,
-                              venv, num_trajectories, show=True, plot_function=None, print_assesement=True,
-                              device='cpu', **plot_kwarg):
-
+                              venv, num_transitions, show=True, plot_function=None, print_assesement=True,
+                              device='cpu', num_chunks=1, **plot_kwarg):
+    per_chunk = ceil(num_transitions/num_chunks)
     assert len(agents_to_asses) == len(labels)
     confidences = []
     for i, assessed_agent in enumerate(agents_to_asses):
-        traj = flatten_trajectories_with_rew(generate_trajectories(assessed_agent, venv, make_min_timesteps(num_trajectories)))
-        confidences.append(traj_confidence(traj, disc_func, agent, action_space_size, device))
+        confidences_in_chunks = []
+        for _ in range(num_chunks):
+            traj = flatten_trajectories_with_rew(generate_trajectories(assessed_agent, venv, make_min_timesteps(per_chunk)))
+            confidence = traj_confidence(traj, disc_func, agent, action_space_size, device)
+            confidences_in_chunks.append(confidence)
+            del traj
+            gc.collect()
+        confidences.append(np.concatenate(confidences_in_chunks))
         if print_assesement:
             print('finished assessing ' + str(labels[i]) + ' - avg confidence: ' + str(confidences[i].mean()))
     if not show:
