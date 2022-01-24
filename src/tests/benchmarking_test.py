@@ -94,6 +94,24 @@ class BenchMarkTest(unittest.TestCase):
         print('avg reward: '+str(avg_rewards))
         generate_trajectory_footage(agent, self.venv, gif_path)
 
+    def test_single_classification(self):
+        agent_path = ''
+        disc_path = ''
+        reference_agent_path = ''
+        save_path = ''
+        agent_label = ''
+        ref_agent = Config.agent_training_algo.load(reference_agent_path)
+        agent = Config.agent_training_algo.load(agent_path)
+        disc_func = load_disc_func(disc_path)
+        fakes, labels = generate_fake_list()
+
+        fakes += [agent]
+        labels += [agent_label]
+        fake_agent_classification(ref_agent, disc_func, agent, labels,
+                                  Config.env_action_space_size, self.venv, Config.num_transitions,
+                                  plot_function=plot_distribution, save_path=save_path,
+                                  print_assesement=False, agent_color='r', expert_color='g')
+
     def test_partial_pipelie(self):
         print("starting partial pipeline")
         agent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent1'
@@ -156,7 +174,7 @@ class BenchMarkTest(unittest.TestCase):
                         fake_agent_classification(agents[i], disc_func, temp_agents, temp_labels,
                                                   Config.env_action_space_size, self.venv, Config.num_transitions,
                                                   plot_function=plot_bar_mean, agent_color='r', save_path=path,
-                                                  print_assesement=False, device=device)
+                                                  print_assesement=False, device=device, num_chunks=num_chunks)
                         print('finished creating ' + path)
                         if k in distribution_agents_index:
                             temp_labels = [agents_label[i], agents_label[k], "Expert"]
@@ -166,7 +184,7 @@ class BenchMarkTest(unittest.TestCase):
                             fake_agent_classification(agents[i], disc_func, temp_agents, temp_labels,
                                                       Config.env_action_space_size, self.venv, Config.num_transitions,
                                                       plot_function=plot_distribution, save_path=path,
-                                                      print_assesement=False, device=device)
+                                                      print_assesement=False, device=device, num_chunks=num_chunks)
                             print('finished creating ' + path)
             for k in range(num_agents):
                 temp_labels = labels + [agents_label[k], "Expert"]
@@ -176,7 +194,7 @@ class BenchMarkTest(unittest.TestCase):
                 fake_agent_classification(None, disc_func, temp_agents, temp_labels,
                                           Config.env_action_space_size, self.venv, Config.num_transitions,
                                           plot_function=plot_bar_mean, agent_color='r', save_path=path,
-                                          print_assesement=False, device=device)
+                                          print_assesement=False, device=device, num_chunks=num_chunks)
                 print('finished creating ' + path)
                 if k in distribution_agents_index:
                     temp_labels = [agents_label[k], "Expert"]
@@ -186,7 +204,7 @@ class BenchMarkTest(unittest.TestCase):
                     fake_agent_classification(None, disc_func, temp_agents, temp_labels,
                                               Config.env_action_space_size, self.venv, Config.num_transitions,
                                               plot_function=plot_distribution, save_path=path,
-                                              print_assesement=False, device=device)
+                                              print_assesement=False, device=device, num_chunks=num_chunks)
                     print('finished creating ' + path)
 
     # def test_save_fig(self):
