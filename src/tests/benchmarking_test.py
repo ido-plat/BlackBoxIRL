@@ -94,6 +94,24 @@ class BenchMarkTest(unittest.TestCase):
         print('avg reward: '+str(avg_rewards))
         generate_trajectory_footage(agent, self.venv, gif_path)
 
+    def test_single_classification(self):
+        agent_path = ''
+        disc_path = ''
+        reference_agent_path = ''
+        save_path = ''
+        agent_label = ''
+        ref_agent = Config.agent_training_algo.load(reference_agent_path)
+        agent = Config.agent_training_algo.load(agent_path)
+        disc_func = load_disc_func(disc_path)
+        fakes, labels = generate_fake_list()
+
+        fakes += [agent]
+        labels += [agent_label]
+        fake_agent_classification(ref_agent, disc_func, agent, labels,
+                                  Config.env_action_space_size, self.venv, Config.num_transitions,
+                                  plot_function=plot_distribution, save_path=save_path,
+                                  print_assesement=False, agent_color='r', expert_color='g')
+
     def test_partial_pipelie(self):
         print("starting partial pipeline")
         agent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent1'
