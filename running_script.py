@@ -12,6 +12,3 @@ print('made test init')
 # t.test_full_pipeline()
 t.test_partial_pipelie()
 print('done')
-
-
-

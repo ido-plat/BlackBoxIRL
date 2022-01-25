@@ -102,15 +102,14 @@ class BenchMarkTest(unittest.TestCase):
         iagent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent2'
         disc1_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func1'
         disc2_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func2'
-        save_dir = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots' # todo abs path
+        save_dir = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots'
         agent_list_path = [agent1_save_path, agent2_save_path, iagent1_save_path, iagent2_save_path]
         label_list = ["Agent1", "Agent2", "Iagent1", "Iagent2"]
         algo_list = [Config.agent_training_algo, Config.agent_training_algo, Config.iterative_agent_training_algo,
                      Config.iterative_agent_training_algo]
         disc_func_lst = [disc1_save_path, disc2_save_path]
         interesting_agents = [0, 1]
-        self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents,
-                              device='cpu', num_chunks=100)
+        self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents, num_chunks=100)
 
     def test_full_pipeline(self):
         print("starting full pipeline")
@@ -145,7 +144,6 @@ class BenchMarkTest(unittest.TestCase):
         for n_disc, disc_function_path in enumerate(disc_function_path_list):
             disc_func = load_disc_func(disc_function_path, device)
             fakes, labels = generate_fake_list()
-            print(fakes, labels, use_fakes)
             for i in range(num_agents):
                 for k in range(num_agents):
                     if i != k:
@@ -156,7 +154,7 @@ class BenchMarkTest(unittest.TestCase):
                         fake_agent_classification(agents[i], disc_func, temp_agents, temp_labels,
                                                   Config.env_action_space_size, self.venv, Config.num_transitions,
                                                   plot_function=plot_bar_mean, agent_color='r', save_path=path,
-                                                  print_assesement=False, device=device)
+                                                  print_assesement=False, device=device, num_chunks=num_chunks)
                         print('finished creating ' + path)
                         if k in distribution_agents_index:
                             temp_labels = [agents_label[i], agents_label[k], "Expert"]
@@ -166,7 +164,7 @@ class BenchMarkTest(unittest.TestCase):
                             fake_agent_classification(agents[i], disc_func, temp_agents, temp_labels,
                                                       Config.env_action_space_size, self.venv, Config.num_transitions,
                                                       plot_function=plot_distribution, save_path=path,
-                                                      print_assesement=False, device=device)
+                                                      print_assesement=False, device=device, num_chunks=num_chunks)
                             print('finished creating ' + path)
             for k in range(num_agents):
                 temp_labels = labels + [agents_label[k], "Expert"]
@@ -176,7 +174,7 @@ class BenchMarkTest(unittest.TestCase):
                 fake_agent_classification(None, disc_func, temp_agents, temp_labels,
                                           Config.env_action_space_size, self.venv, Config.num_transitions,
                                           plot_function=plot_bar_mean, agent_color='r', save_path=path,
-                                          print_assesement=False, device=device)
+                                          print_assesement=False, device=device, num_chunks=num_chunks)
                 print('finished creating ' + path)
                 if k in distribution_agents_index:
                     temp_labels = [agents_label[k], "Expert"]
@@ -186,7 +184,7 @@ class BenchMarkTest(unittest.TestCase):
                     fake_agent_classification(None, disc_func, temp_agents, temp_labels,
                                               Config.env_action_space_size, self.venv, Config.num_transitions,
                                               plot_function=plot_distribution, save_path=path,
-                                              print_assesement=False, device=device)
+                                              print_assesement=False, device=device, num_chunks=num_chunks)
                     print('finished creating ' + path)
 
     # def test_save_fig(self):

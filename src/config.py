@@ -7,7 +7,7 @@ from src.alogirhms.airl import airl
 
 class Config:
     # misc
-    num_transitions = int(2e5)
+    num_transitions = int(5e4)
     in_lab = True
     use_db = True
     # env configs
