@@ -12,7 +12,7 @@ from src.config import Config
 from src.tests.fake_agent_test_eval import generate_fake_list
 from src.utils.confidence_plots import *
 from src.transitions.db_transitions import make_db_using_config, TransitionsDB
-
+from src.transitions.airl_eval_db import make_eval_db_from_config
 class BenchMarkTest(unittest.TestCase):
     def setUp(self) -> None:
         # if Config.env_max_timestep is not np.inf:
@@ -44,20 +44,30 @@ class BenchMarkTest(unittest.TestCase):
         # plt.show()
 
     def fake_agent_creation(self, save_agent_path, save_disc_func_path, save_iterated_agent_path, save_reward_function,
-                            use_db, db_filename='', rewrite_db_file=False):
+                            use_db, db_filename='', index=0, rewrite_db_file=False, eval_db_path='', eval_result_path='',
+                            mode=''):
         config = Config
         agent_training_alg = config.agent_training_algo
         airl_arg = config.airl_args.copy()
         airl_arg['save_disc_path'] = save_disc_func_path
         airl_arg['save_reward_func_path'] = save_reward_function
         airl_arg['save_iagent_path'] = save_iterated_agent_path
-        samples = make_db_using_config(db_filename, rewrite_db_file, self.expert, self.venv) if use_db else \
+        samples = make_db_using_config(db_filename, index, rewrite_db_file, self.expert, self.venv) if use_db else \
                   flatten_trajectories_with_rew(generate_trajectories(self.expert, self.venv, make_min_timesteps(config.airl_num_transitions)))
+
         print('generated samples')
+        db = None
+        if eval_db_path:
+            db = make_eval_db_from_config(eval_db_path, eval_result_path, self.expert, self.venv, mode)
+            print('Made eval DB')
         train_agent_learnt_reward(samples, self.venv, agent_training_alg,
                                   learning_time_step=config.model_total_training_steps,
                                   model_arg=config.model_training_args, save_model_path=save_agent_path,
-                                  return_disc=True, airl_args=airl_arg)
+                                  return_disc=True, airl_args=airl_arg, evalDB=db)
+        if eval_db_path:
+            db.close()
+        if use_db:
+            samples.close()
 
     def test_compare_expart_agent_noise(self):
         agent_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent1.zip'
@@ -139,13 +149,16 @@ class BenchMarkTest(unittest.TestCase):
         reward2_func_path = 'data/SpaceInvadersNoFrameskip-v4/reward_functions/SpaceInvaders-v4_reward_func2'
         disc1_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func1'
         disc2_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func2'
-        db_file1 = 'data/SpaceInvadersNoFrameskip-v4/transitions_db/DB1_SpaceInvadersNoFrameskip-v4.h5'
-        db_file2 = 'data/SpaceInvadersNoFrameskip-v4/transitions_db/DB2_SpaceInvadersNoFrameskip-v4.h5'
-        self.fake_agent_creation(agent1_save_path, disc1_save_path, iagent1_save_path, reward1_func_path, Config.use_db, db_file1, True)
+        db_file = 'data/SpaceInvadersNoFrameskip-v4/transitions_db/DB1_SpaceInvadersNoFrameskip-v4.h5'
+        eval_db_path = ''
+        eval_result_path = ''
+        self.fake_agent_creation(agent1_save_path, disc1_save_path, iagent1_save_path, reward1_func_path, Config.use_db, db_file,
+                                 0, False, eval_db_path, eval_result_path, 'train')
         print('finished creating first agent, starting second')
-        self.fake_agent_creation(agent2_save_path, disc2_save_path, iagent2_save_path, reward2_func_path, Config.use_db, db_file2, True)
+        self.fake_agent_creation(agent2_save_path, disc2_save_path, iagent2_save_path, reward2_func_path, Config.use_db, db_file,
+                                 1, False, eval_db_path, eval_result_path, 'eval')
         #                                  finished pipline, creating result visualisation
-        # save_dir = 'src/data/result_plots/' #   todo full path
+        # save_dir = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/'
         # agent_list_path = [agent1_save_path, agent2_save_path, iagent1_save_path, iagent2_save_path]
         # label_list = ["Agent1", "Agent2", "Iagent1", "Iagent2"]
         # algo_list = [Config.agent_training_algo, Config.agent_training_algo, Config.iterative_agent_training_algo,

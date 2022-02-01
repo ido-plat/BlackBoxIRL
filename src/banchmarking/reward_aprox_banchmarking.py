@@ -30,21 +30,21 @@ def check_reward_distribution(agent, reward_func, venv, num_traj, plot_hist=Fals
 
 
 def train_agent_learnt_reward(samples, venv, model_type, learning_time_step, save_model_path=None, model_arg=None,
-                              airl_args=None, return_disc=False):  # could need a lot more arguments
+                              airl_args=None, return_disc=False, evalDB=None):  # could need a lot more arguments
     if not airl_args:
         airl_args = {}
     if not model_arg:
         model_arg = {'policy': 'CnnPolicy'}
     disc = None
     if return_disc:
-        reward_func, disc = airl(samples, venv, return_disc=True, **airl_args)
+        reward_func, disc = airl(samples, venv, return_disc=True, evalDB=evalDB, **airl_args)
     else:
-        reward_func = airl(samples, venv, **airl_args)  # check airl arguments
+        reward_func = airl(samples, venv, evalDB=evalDB, **airl_args)
     new_env = RewardVecEnvWrapper(
         venv=venv,
         reward_fn=reward_func,
     )
-    model = train_agent(new_env,model_type, learning_time_step, model_arg)
+    model = train_agent(new_env, model_type, learning_time_step, model_arg)
     if save_model_path:
         model.save(save_model_path)
     if return_disc:

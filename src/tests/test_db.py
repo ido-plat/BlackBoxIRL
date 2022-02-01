@@ -12,11 +12,11 @@ from src.utils.env_utils import SpaceInvadersEnv
 from src.config import Config
 from src.tests.fake_agent_test_eval import generate_fake_list
 from src.utils.confidence_plots import *
-from src.transitions.db_transitions import TransitionsDB
+from src.transitions.db_transitions import TransitionsDB, make_db_using_config
 
 class BenchMarkTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.file_name = 'src/tests/temp/test_db.h5'
+        self.file_name = 'src/tests/temp/test_db.h5'#todo change
         # self.db = tb.open_file(self.file_name, 'w')
         venv_generator = SpaceInvadersEnv(Config.env, Config.num_env, None, Config.env_max_timestep, True)
         self.venv = venv_generator.make_venv()
@@ -50,6 +50,12 @@ class BenchMarkTest(unittest.TestCase):
         for i, item in enumerate(self.db):
             print(f"{i} has shape of {len(item['obs'])}")
         self.db.close()
+
+    def test_merge(self):
+        db1 = ''
+        db2 = ''
+        convert_from = (db1, db2)
+        self.db = make_db_using_config(self.file_name, 0, True, self.expert, self.venv, convert_from)
 
 
 
