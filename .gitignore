@@ -126,3 +126,5 @@ dmypy.json
 /src/tests/temp/
 /rl-baselines3-zoo/
 /imitation/
+/data/SpaceInvadersNoFrameskip-v4/transitions_db/
+/data/SpaceInvadersNoFrameskip-v4/eval_db/

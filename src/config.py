@@ -10,6 +10,8 @@ class Config:
     num_transitions = int(5e4)
     in_lab = True
     use_db = True
+    result_img_shape = (900, 1600, 3)
+    result_img_dtype = tb.UInt8Col
     # env configs
     env = 'SpaceInvadersNoFrameskip-v4'
     env_action_space_size = 6

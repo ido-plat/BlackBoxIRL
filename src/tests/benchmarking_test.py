@@ -130,7 +130,7 @@ class BenchMarkTest(unittest.TestCase):
         iagent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent2'
         disc1_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func1'
         disc2_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func2'
-        save_dir = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots'
+        save_dir = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/'
         agent_list_path = [agent1_save_path, agent2_save_path, iagent1_save_path, iagent2_save_path]
         label_list = ["Agent1", "Agent2", "Iagent1", "Iagent2"]
         algo_list = [Config.agent_training_algo, Config.agent_training_algo, Config.iterative_agent_training_algo,
