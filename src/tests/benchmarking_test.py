@@ -8,7 +8,7 @@ from imitation.algorithms.density import DensityType
 from src.alogirhms.airl import *
 from src.utils.agent_utils import generate_trajectory_footage
 from src.utils.env_utils import SpaceInvadersEnv
-from src.config import Config
+from src.config import Config, print_to_cfg_log
 from src.tests.fake_agent_test_eval import generate_fake_list
 from src.utils.confidence_plots import *
 from src.transitions.db_transitions import make_db_using_config, TransitionsDB
@@ -52,14 +52,15 @@ class BenchMarkTest(unittest.TestCase):
         airl_arg['save_disc_path'] = save_disc_func_path
         airl_arg['save_reward_func_path'] = save_reward_function
         airl_arg['save_iagent_path'] = save_iterated_agent_path
+        print_to_cfg_log('starting to generate samples')
         samples = make_db_using_config(db_filename, index, rewrite_db_file, self.expert, self.venv) if use_db else \
                   flatten_trajectories_with_rew(generate_trajectories(self.expert, self.venv, make_min_timesteps(config.airl_num_transitions)))
 
-        print('generated samples')
+        print_to_cfg_log('generated samples')
         db = None
         if eval_db_path:
             db = make_eval_db_from_config(eval_db_path, eval_result_path, self.expert, self.venv, mode)
-            print('Made eval DB')
+            print_to_cfg_log('Made eval DB')
         train_agent_learnt_reward(samples, self.venv, agent_training_alg,
                                   learning_time_step=config.model_total_training_steps,
                                   model_arg=config.model_training_args, save_model_path=save_agent_path,
@@ -104,7 +105,7 @@ class BenchMarkTest(unittest.TestCase):
         agent_load_path = 'src/tests/temp/real_reward_agent2.zip'
         agent = config.agent_training_algo.load(agent_load_path)
         avg_rewards = get_agent_avg_reward(agent, self.venv, config.num_transitions)
-        print('avg reward: '+str(avg_rewards))
+        print_to_cfg_log('avg reward: '+str(avg_rewards))
         generate_trajectory_footage(agent, self.venv, gif_path)
 
     def test_single_classification(self):
@@ -118,8 +119,6 @@ class BenchMarkTest(unittest.TestCase):
         agent = Config.agent_training_algo.load(reference_agent_path)
         disc_func = load_disc_func(disc_path)
         fakes, labels = generate_fake_list()
-        with open('out.txt', "a") as f:
-            print('Preparing for class', file=f)
         fakes += [agent, self.expert]
         labels += [agent_label, "Expert"]
         fake_agent_classification(ref_agent, disc_func, fakes, labels,
@@ -128,7 +127,7 @@ class BenchMarkTest(unittest.TestCase):
                                   print_assesement=True, agent_color='r', expert_color='g', num_chunks=num_chunks)
 
     def test_partial_pipeline(self):
-        print("starting partial pipeline")
+        print_to_cfg_log("starting partial pipeline")
         agent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent1'
         agent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent2'
         iagent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent1'
@@ -145,7 +144,7 @@ class BenchMarkTest(unittest.TestCase):
         self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents, num_chunks=100)
 
     def test_full_pipeline(self):
-        print("starting full pipeline")
+        print_to_cfg_log("starting full pipeline")
         agent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent1'
         agent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent2'
         iagent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent1'
@@ -159,11 +158,11 @@ class BenchMarkTest(unittest.TestCase):
         eval_result_path = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/eval_result.png'
         self.fake_agent_creation(agent1_save_path, disc1_save_path, iagent1_save_path, reward1_func_path, Config.use_db, db_file,
                                  0, False, eval_db_path, eval_result_path, 'train')
-        print('finished creating first agent, starting second')
+        print_to_cfg_log('finished creating first agent, starting second')
         self.fake_agent_creation(agent2_save_path, disc2_save_path, iagent2_save_path, reward2_func_path, Config.use_db, db_file,
                                  1, False, eval_db_path, eval_result_path, 'eval')
         #                                  finished pipline, creating result visualisation
-        print("FINISHED PIPELINE - MAKING GRAPHS")
+        print_to_cfg_log("FINISHED PIPELINE - MAKING GRAPHS")
         save_dir = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/'
         agent_list_path = [agent1_save_path, agent2_save_path, iagent1_save_path, iagent2_save_path]
         label_list = ["Agent1", "Agent2", "Iagent1", "Iagent2"]
@@ -235,6 +234,8 @@ class BenchMarkTest(unittest.TestCase):
     #                               Config.env_action_space_size, self.venv, Config.num_transitions,
     #                               plot_function=plot_distribution, save_path=path,
     #                               print_assesement=False)
+
+
 if __name__ == '__main__':
     t = BenchMarkTest()
     t.test_full_pipeline()

@@ -29,7 +29,6 @@ class EvalDB:
         self.result_timing = []
         expected_rows = int(num_airl_iteration / every_n_agent_make_traj)
         self.every_n_agent_make_traj = every_n_agent_make_traj
-        print(f"Dtype {action_dtype} , Shape : {action_shape} , batch : {self.batch_size} summation : {(self.batch_size,) + action_shape}")
 
         class TransitionBatch(tb.IsDescription):
             acts = action_dtype(shape=(self.batch_size,) + action_shape, pos=0)
@@ -67,7 +66,7 @@ class EvalDB:
             (now + datetime.timedelta(seconds=((self.num_iter - curr_iter) * time_diff.seconds))).strftime('%d/%m, %H:%M:%S')
         self.result_timing.append(now)
         with open(self.log_file, 'a') as f:
-            f.write(f"{curr_iter}) Took {time_diff} seconds, finished at {now.strftime('%m/%d, %H:%M:%S')} And should finish the entire run at {total_time_left}")
+            f.write(f"{curr_iter}) Took {time_diff} seconds, finished at {now.strftime('%d/%m, %H:%M:%S')} And should finish the entire run at {total_time_left}")
             if self.mode != "train":
                 f.write(" Curr result is %.4f" % self.results[-1])
             f.write('\n')
@@ -99,7 +98,6 @@ class EvalDB:
 
         num_rows = self.agent_table.nrows
         indx = list(range(num_rows)) if self.num_traj is None else random.sample(range(num_rows), self.num_traj)
-        # print(f"AGENT LEN : {self.agent_table.nrows} , EXPERT LEN : {self.expert_table.nrows}")
         agent_traj = self.agent_table[indx]
         expert_traj = self.expert_table[indx]
         result = 0

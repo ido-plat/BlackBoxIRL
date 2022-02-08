@@ -17,7 +17,7 @@ class Config:
     env = 'SpaceInvadersNoFrameskip-v4'
     env_action_space_size = 6
     num_env = 1
-    env_max_timestep = np.inf
+    env_max_timestep = 500
     env_obs_shape = (4, 84, 84)
     env_action_shape = ()
     env_dones_shape = ()
@@ -107,9 +107,9 @@ class Config:
     airl_num_transitions = batch_size * 1000    # roughly int(1e7)
     airl_iterations = 1000
     airl_model_training_steps = int(pow(2, 8))     # per grad step 2^^8
-    airl_model_num_steps = int(pow(2, 15))  # num steps 2^^16
+    airl_model_num_steps = int(pow(2, 16))  # num steps 2^^16
     airl_result_dir = 'data/SpaceInvadersNoFrameskip-v4/result_plots'
-    save_tensor_board = True
+    save_tensor_board = False
     airl_args = {
         'batch_size': batch_size,
         'policy_training_steps_for_iteration': airl_model_training_steps,
@@ -126,3 +126,8 @@ class Config:
 
     def __str__(self):
         return str({attr: Config.__dict__[attr] for attr in dict(Config.__dict__) if not callable(getattr(Config, attr)) and not attr.startswith("__")})
+
+def print_to_cfg_log(msg):
+    with open(Config.log_file, 'a') as f:
+        print(msg, file=f)
+    print(msg)

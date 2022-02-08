@@ -4,22 +4,17 @@ import numpy as np
 import os
 import gc
 from imitation.data.rollout import make_min_timesteps, flatten_trajectories_with_rew, generate_trajectories
-
+from src.config import print_to_cfg_log
 
 class TransitionsDB(Iterable):
     def __init__(self, batch_size, num_transitions, max_transition_per_run, file_name, venv, expert, observation_shape,
                  observation_dtype, action_shape, action_dtype, dones_shape, dones_dtype, result_shape,
                  result_dtype, max_num_result=100, rewrite_db_file=False, num_tables=2, starting_index=0,
-                 convert_from=None, use_observation=False):
+                 use_observation=False, log=True):
 
         self.index = starting_index
         self.file_name = file_name
-        if convert_from:
-
-            self.batch_size = batch_size
-            self._convert_from(convert_from, num_transitions, observation_shape, observation_dtype, action_shape,
-                               action_dtype, dones_shape, dones_dtype, result_shape, result_dtype, max_num_result)
-            return
+        self.print_func = print_to_cfg_log if log else print
         if os.path.isfile(self.file_name) and not rewrite_db_file:
             self.db = tb.open_file(self.file_name, 'r+')
             self.tables = []
@@ -31,49 +26,12 @@ class TransitionsDB(Iterable):
             self.max_num_result = self.result_plots.attrs.max_images
 
         else:
-            if rewrite_db_file:
-                raise ValueError
             self._make_db(batch_size, num_transitions, max_transition_per_run, venv, expert, observation_shape,
                           observation_dtype, action_shape, action_dtype, dones_shape, dones_dtype, result_shape,
                           result_dtype, max_num_result, num_tables, use_observation)
 
     def change_index(self, ind):
         self.index = ind
-
-    def _convert_from(self, convert, num_transitions, observation_shape,
-                      observation_dtype, action_shape, action_dtype, dones_shape, dones_dtype, result_shape,
-                      result_dtype, max_num_result=100):
-
-        self.db = tb.open_file(self.file_name, 'w')
-
-        class TransitionBatch(tb.IsDescription):
-            acts = action_dtype(shape=(self.batch_size,) + action_shape, pos=0)
-            dones = dones_dtype(shape=(self.batch_size,) + dones_shape, pos=1)
-            obs = observation_dtype(shape=(self.batch_size,) + observation_shape, pos=2)
-            next_obs = observation_dtype(shape=(self.batch_size,) + observation_shape, pos=3)
-
-        class Result(tb.IsDescription):
-            images = result_dtype(shape=(max_num_result, ) + result_shape, pos=0)
-            config = tb.StringCol(itemsize=5000, pos=1)
-            date = tb.StringCol(itemsize=100, pos=2)
-            actual_num = tb.UInt8Col(pos=3)
-            labels = tb.StringCol(itemsize=1000, shape=max_num_result, pos=4)
-
-        num_batches = int(num_transitions / self.batch_size)
-        self.tables = []
-        for i in range(2):
-            old_table = tb.open_file(convert[i], 'r').root['Database']
-            table = self.db.create_table(self.db.root, f"Database{i}", TransitionBatch, expectedrows=num_batches)
-            for row in old_table:
-                table.append([(row["acts"], row["dones"], row["obs"], row["next_obs"])])
-            table.attrs.batch_size = self.batch_size
-            self.tables.append(table)
-
-        self.result_plots = self.db.create_table(self.db.root, "Results", Result)
-        self.result_shape = result_shape
-        self.result_plots.attrs.image_shape = result_shape
-        self.result_plots.attrs.max_images = max_num_result
-        self.max_num_result = max_num_result
 
     def _make_db(self, batch_size, num_transitions, max_transition_per_run, venv, expert, observation_shape,
                  observation_dtype, action_shape, action_dtype, dones_shape, dones_dtype, result_shape,
@@ -92,21 +50,29 @@ class TransitionsDB(Iterable):
             actual_num = tb.UInt8Col(pos=3)
             labels = tb.StringCol(itemsize=1000, shape=max_num_result, pos=4)
 
+        if os.path.isfile(self.file_name):
+            file_exist = True
+            mode = 'a'
+        else:
+            file_exist = False
+            mode = 'w'
         self.batch_size = batch_size
         num_batches = int(num_transitions/self.batch_size)
         num_batches_per_append = int(max_transition_per_run/self.batch_size)
-        self.db = tb.open_file(self.file_name, 'w')
+        self.db = tb.open_file(self.file_name, mode)
         self.tables = []
         for i in range(num_databases_to_make):
-            table = self.db.create_table(self.db.root, f"Database{i}", TransitionBatch, expectedrows=num_batches)
+            if file_exist:
+                table = self.db.root[f"Database{i}"]
+                table.remove_row(0)
+            else:
+                table = self.db.create_table(self.db.root, f"Database{i}", TransitionBatch, expectedrows=num_batches)
             self._fil_table(table, num_batches, num_batches_per_append, expert, venv)
             table.attrs.batch_size = self.batch_size
             self.tables.append(table)
-            print(f"Finished making table n{i}")
+            self.print_func(f"Finished making table n{i}")
 
-
-
-        self.result_plots = self.db.create_table(self.db.root, "Results", Result)
+        self.result_plots = self.db.create_table(self.db.root, "Results", Result) if not file_exist else self.db.root['Result']
         self.result_shape = result_shape
         self.result_plots.attrs.image_shape = result_shape
         self.result_plots.attrs.max_images = max_num_result
@@ -135,13 +101,13 @@ class TransitionsDB(Iterable):
             del to_append
             gc.collect()    # to make sure we free the data
             batches_inserted += num_batches_to_create
-            print(f"Created {batches_inserted} out of {num_batches} batches, this iteration made "
-                  f"{num_batches_to_create}")
+            self.print_func(f"Created {batches_inserted} out of {num_batches} batches, this iteration made "
+                            f"{num_batches_to_create}")
 
     def add_visualisation_images(self, config, images, labels):
         curr_len = len(images)
         if curr_len > self.max_num_result:
-            print(f"Max result len is {self.max_num_result} but asked to make {curr_len} results")
+            self.print_func(f"Max result len is {self.max_num_result} but asked to make {curr_len} results")
         from datetime import datetime
         time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         to_insert_images = np.zeros((self.max_num_result, ) + self.result_shape)
@@ -174,19 +140,53 @@ class TransitionsDB(Iterable):
         row = self.result_plots[index]
         for i in range(row['actual_num']):
             cv2.imwrite(path+tb_string_to_str(row['labels'][i]), row['images'][i])
-            print(f"spilled {tb_string_to_str(row['labels'][i])} to {path}")
+            self.print_func(f"spilled {tb_string_to_str(row['labels'][i])} to {path}")
         metadata_name = 'db_metadata.txt'
         with open(path+metadata_name, 'w') as f:
             f.write(f"DB Created at : {tb_string_to_str(row['date'])}\nConfig : {tb_string_to_str(row['config'])}")
 
+    # def _convert_from(self, convert, num_transitions, observation_shape,
+    #                   observation_dtype, action_shape, action_dtype, dones_shape, dones_dtype, result_shape,
+    #                   result_dtype, max_num_result=100):
+    #
+    #     self.db = tb.open_file(self.file_name, 'w')
+    #
+    #     class TransitionBatch(tb.IsDescription):
+    #         acts = action_dtype(shape=(self.batch_size,) + action_shape, pos=0)
+    #         dones = dones_dtype(shape=(self.batch_size,) + dones_shape, pos=1)
+    #         obs = observation_dtype(shape=(self.batch_size,) + observation_shape, pos=2)
+    #         next_obs = observation_dtype(shape=(self.batch_size,) + observation_shape, pos=3)
+    #
+    #     class Result(tb.IsDescription):
+    #         images = result_dtype(shape=(max_num_result, ) + result_shape, pos=0)
+    #         config = tb.StringCol(itemsize=5000, pos=1)
+    #         date = tb.StringCol(itemsize=100, pos=2)
+    #         actual_num = tb.UInt8Col(pos=3)
+    #         labels = tb.StringCol(itemsize=1000, shape=max_num_result, pos=4)
+    #
+    #     num_batches = int(num_transitions / self.batch_size)
+    #     self.tables = []
+    #     for i in range(2):
+    #         old_table = tb.open_file(convert[i], 'r').root['Database']
+    #         table = self.db.create_table(self.db.root, f"Database{i}", TransitionBatch, expectedrows=num_batches)
+    #         for row in old_table:
+    #             table.append([(row["acts"], row["dones"], row["obs"], row["next_obs"])])
+    #         table.attrs.batch_size = self.batch_size
+    #         self.tables.append(table)
+    #
+    #     self.result_plots = self.db.create_table(self.db.root, "Results", Result)
+    #     self.result_shape = result_shape
+    #     self.result_plots.attrs.image_shape = result_shape
+    #     self.result_plots.attrs.max_images = max_num_result
+    #     self.max_num_result = max_num_result
 
-def make_db_using_config(file_name, index, rewrite_file, expert, venv, convert_from=None):
+def make_db_using_config(file_name, index, rewrite_file, expert, venv):
     from src.config import Config
     return TransitionsDB(Config.batch_size, Config.airl_num_transitions,
                          Config.maximum_batches_in_memory * Config.batch_size, file_name, venv, expert,
                          observation_shape=Config.env_obs_shape, observation_dtype=Config.env_obs_dtype,
                          action_shape=Config.env_action_shape, action_dtype=Config.env_act_dtype,
-                         dones_shape=Config.env_dones_shape,dones_dtype= Config.env_dones_dtype,
+                         dones_shape=Config.env_dones_shape, dones_dtype=Config.env_dones_dtype,
                          result_shape=Config.result_img_shape, result_dtype=Config.result_img_dtype,
-                         rewrite_db_file=rewrite_file, starting_index=index, convert_from=convert_from)
+                         rewrite_db_file=rewrite_file, starting_index=index)
 
