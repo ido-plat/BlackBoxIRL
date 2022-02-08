@@ -13,7 +13,7 @@ import gc
 
 def fake_agent_classification(agent, disc_func, agents_to_asses: Sequence, labels: Sequence, action_space_size,
                               venv, num_transitions, show=True, plot_function=None, print_assesement=True,
-                              device='cpu', num_chunks=1, **plot_kwarg):
+                              device='cpu', num_chunks=1, out_file=None, **plot_kwarg):
     per_chunk = ceil(num_transitions/num_chunks)
     assert len(agents_to_asses) == len(labels)
     confidences = []
@@ -27,7 +27,11 @@ def fake_agent_classification(agent, disc_func, agents_to_asses: Sequence, label
             gc.collect()
         confidences.append(np.concatenate(confidences_in_chunks))
         if print_assesement:
-            print('finished assessing ' + str(labels[i]) + ' - avg confidence: ' + str(confidences[i].mean()))
+            st = 'finished assessing ' + str(labels[i]) + ' - avg confidence: ' + str(confidences[i].mean())
+            print(st)
+            if out_file:
+              with open(out_file, 'a') as f:
+                print(st, file=f)
     if not show:
         return confidences
     if not plot_function:

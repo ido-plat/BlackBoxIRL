@@ -65,6 +65,8 @@ class BenchMarkTest(unittest.TestCase):
                                   model_arg=config.model_training_args, save_model_path=save_agent_path,
                                   return_disc=True, airl_args=airl_arg, evalDB=db)
         if eval_db_path:
+            if mode != 'train':
+                db.plot_result()
             db.close()
         if use_db:
             samples.close()
@@ -87,6 +89,7 @@ class BenchMarkTest(unittest.TestCase):
         f = open('src/tests/temp/rewards.txt', 'w')
         for a, l in zip(agents, labels):
             reward = get_agent_avg_reward(a, self.venv, Config.num_transitions)
+            print(l + ' mean reward ' + str(reward))
             print(l + ' mean reward ' + str(reward), file=f)
         f.close()
 
@@ -105,24 +108,26 @@ class BenchMarkTest(unittest.TestCase):
         generate_trajectory_footage(agent, self.venv, gif_path)
 
     def test_single_classification(self):
-        agent_path = ''
-        disc_path = ''
-        reference_agent_path = ''
-        save_path = ''
-        agent_label = ''
-        ref_agent = Config.agent_training_algo.load(reference_agent_path)
-        agent = Config.agent_training_algo.load(agent_path)
+        agent_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent1'
+        disc_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func1'
+        reference_agent_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent2'
+        save_path = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/res.png'
+        agent_label = 'Agent 1'
+        num_chunks = 100
+        ref_agent = Config.iterative_agent_training_algo.load(agent_path)
+        agent = Config.agent_training_algo.load(reference_agent_path)
         disc_func = load_disc_func(disc_path)
         fakes, labels = generate_fake_list()
-
-        fakes += [agent]
-        labels += [agent_label]
-        fake_agent_classification(ref_agent, disc_func, agent, labels,
+        with open('out.txt', "a") as f:
+            print('Preparing for class', file=f)
+        fakes += [agent, self.expert]
+        labels += [agent_label, "Expert"]
+        fake_agent_classification(ref_agent, disc_func, fakes, labels,
                                   Config.env_action_space_size, self.venv, Config.num_transitions,
-                                  plot_function=plot_distribution, save_path=save_path,
-                                  print_assesement=False, agent_color='r', expert_color='g')
+                                  plot_function=plot_bar_mean, save_path=save_path, device='cuda:0', out_file='out.txt',
+                                  print_assesement=True, agent_color='r', expert_color='g', num_chunks=num_chunks)
 
-    def test_partial_pipelie(self):
+    def test_partial_pipeline(self):
         print("starting partial pipeline")
         agent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent1'
         agent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent2'
@@ -149,24 +154,25 @@ class BenchMarkTest(unittest.TestCase):
         reward2_func_path = 'data/SpaceInvadersNoFrameskip-v4/reward_functions/SpaceInvaders-v4_reward_func2'
         disc1_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func1'
         disc2_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func2'
-        db_file = 'data/SpaceInvadersNoFrameskip-v4/transitions_db/DB1_SpaceInvadersNoFrameskip-v4.h5'
-        eval_db_path = ''
-        eval_result_path = ''
+        db_file = 'data/SpaceInvadersNoFrameskip-v4/transitions_db/DB_SpaceInvadersNoFrameskip-v4.h5'
+        eval_db_path = 'data/SpaceInvadersNoFrameskip-v4/eval_db/evalDB_SpaceInvadersNoFrameskip-v4.h5'
+        eval_result_path = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/eval_result.png'
         self.fake_agent_creation(agent1_save_path, disc1_save_path, iagent1_save_path, reward1_func_path, Config.use_db, db_file,
                                  0, False, eval_db_path, eval_result_path, 'train')
         print('finished creating first agent, starting second')
         self.fake_agent_creation(agent2_save_path, disc2_save_path, iagent2_save_path, reward2_func_path, Config.use_db, db_file,
                                  1, False, eval_db_path, eval_result_path, 'eval')
         #                                  finished pipline, creating result visualisation
-        # save_dir = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/'
-        # agent_list_path = [agent1_save_path, agent2_save_path, iagent1_save_path, iagent2_save_path]
-        # label_list = ["Agent1", "Agent2", "Iagent1", "Iagent2"]
-        # algo_list = [Config.agent_training_algo, Config.agent_training_algo, Config.iterative_agent_training_algo,
-        #              Config.iterative_agent_training_algo]
-        # disc_func_lst = [disc1_save_path, disc2_save_path]
-        # interesting_agents = [0, 1]
-        # self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents,
-        #                       False)
+        print("FINISHED PIPELINE - MAKING GRAPHS")
+        save_dir = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/'
+        agent_list_path = [agent1_save_path, agent2_save_path, iagent1_save_path, iagent2_save_path]
+        label_list = ["Agent1", "Agent2", "Iagent1", "Iagent2"]
+        algo_list = [Config.agent_training_algo, Config.agent_training_algo, Config.iterative_agent_training_algo,
+                     Config.iterative_agent_training_algo]
+        disc_func_lst = [disc1_save_path, disc2_save_path]
+        interesting_agents = [0, 1]
+        self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents,
+                              num_chunks=100)
 
     def _analyze_results(self, agents_path, agents_label, algo_list, disc_function_path_list, save_dir,
                          distribution_agents_index, use_fakes=True, device='cuda:0', num_chunks=1):

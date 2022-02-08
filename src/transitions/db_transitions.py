@@ -31,6 +31,8 @@ class TransitionsDB(Iterable):
             self.max_num_result = self.result_plots.attrs.max_images
 
         else:
+            if rewrite_db_file:
+                raise ValueError
             self._make_db(batch_size, num_transitions, max_transition_per_run, venv, expert, observation_shape,
                           observation_dtype, action_shape, action_dtype, dones_shape, dones_dtype, result_shape,
                           result_dtype, max_num_result, num_tables, use_observation)
@@ -43,6 +45,7 @@ class TransitionsDB(Iterable):
                       result_dtype, max_num_result=100):
 
         self.db = tb.open_file(self.file_name, 'w')
+
         class TransitionBatch(tb.IsDescription):
             acts = action_dtype(shape=(self.batch_size,) + action_shape, pos=0)
             dones = dones_dtype(shape=(self.batch_size,) + dones_shape, pos=1)

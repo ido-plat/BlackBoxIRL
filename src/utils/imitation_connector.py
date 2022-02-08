@@ -50,7 +50,7 @@ def log_prob_calc(states, actions, agent, action_space_size, def_device='cuda:0'
 
 # imitation used a different way to define actions in discrete space, instead of 3 -> it turns to [0, 0, 0, 1]
 def discrete_action_conversion(action, action_space_len):
-    action_to_return = th.zeros((len(action)), action_space_len)
+    action_to_return = th.zeros((len(action)), action_space_len, device=action.device)
     for i, val in enumerate(action.int()):  # maybe theres a way to make it a one liner, couldnt think of one.
         action_to_return[i][val] = 1
     return action_to_return

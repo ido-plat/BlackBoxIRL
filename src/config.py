@@ -12,6 +12,7 @@ class Config:
     use_db = True
     result_img_shape = (900, 1600, 3)
     result_img_dtype = tb.UInt8Col
+    log_file = 'out.txt'
     # env configs
     env = 'SpaceInvadersNoFrameskip-v4'
     env_action_space_size = 6
@@ -27,8 +28,8 @@ class Config:
     # dbs configs
     batch_size = 1024
     maximum_batches_in_memory = 10
-    every_n_agent_eval = 2  # first run, every n-th agent would fill the eval db
-    num_transitions_per_eval = int(2e10)
+    every_n_agent_eval = 8  # first run, every n-th agent would fill the eval db
+    num_transitions_per_eval = int(pow(2, 10))
     num_traj_disc_eval = None   # None == all
     # expert configs
     expert_path = 'data/SpaceInvadersNoFrameskip-v4/agents/SpaceInvadersNoFrameskip-v4_DQN_Expert.zip'
@@ -104,18 +105,19 @@ class Config:
     # airl configs
     irl_alo = airl
     airl_num_transitions = batch_size * 1000    # roughly int(1e7)
-    airl_iterations = 5000
-    airl_model_training_steps = int(pow(2, 10))
+    airl_iterations = 1000
+    airl_model_training_steps = int(pow(2, 8))     # per grad step 2^^8
+    airl_model_num_steps = int(pow(2, 15))  # num steps 2^^16
     airl_result_dir = 'data/SpaceInvadersNoFrameskip-v4/result_plots'
     save_tensor_board = True
     airl_args = {
         'batch_size': batch_size,
         'policy_training_steps_for_iteration': airl_model_training_steps,
-        'total_timesteps': airl_iterations * airl_model_training_steps,
+        'total_timesteps': airl_iterations * airl_model_num_steps,
         "allow_variable_horizon": env_max_timestep is np.inf,
         'disc_updates': 8,
         'iagent_args': all_model_training_args[env][iterative_agent_training_algo],
-        'gen_train_timesteps': int(pow(2, 16)),
+        'gen_train_timesteps': airl_model_num_steps,
         'init_tensorboard_graph': save_tensor_board,
         'init_tensorboard': save_tensor_board,
         'log_dir': airl_result_dir
