@@ -13,6 +13,8 @@ from src.tests.fake_agent_test_eval import generate_fake_list
 from src.utils.confidence_plots import *
 from src.transitions.db_transitions import make_db_using_config, TransitionsDB
 from src.transitions.airl_eval_db import make_eval_db_from_config
+
+
 class BenchMarkTest(unittest.TestCase):
     def setUp(self) -> None:
         # if Config.env_max_timestep is not np.inf:
@@ -73,6 +75,7 @@ class BenchMarkTest(unittest.TestCase):
             samples.close()
 
     def test_compare_expart_agent_noise(self):
+        print_to_cfg_log("Starting test compare")
         agent_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent1.zip'
         agent2_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent2.zip'
         iagent1_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent1.zip'
@@ -112,7 +115,7 @@ class BenchMarkTest(unittest.TestCase):
         agent_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent1'
         disc_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func1'
         reference_agent_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent2'
-        save_path = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/res.png'
+        save_path = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/res2.png'
         agent_label = 'Agent 1'
         num_chunks = 100
         ref_agent = Config.iterative_agent_training_algo.load(agent_path)
@@ -128,13 +131,13 @@ class BenchMarkTest(unittest.TestCase):
 
     def test_partial_pipeline(self):
         print_to_cfg_log("starting partial pipeline")
+        save_dir = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/'
         agent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent1'
         agent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent2'
         iagent1_save_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent1'
         iagent2_save_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent2'
         disc1_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func1'
         disc2_save_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func2'
-        save_dir = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/'
         agent_list_path = [agent1_save_path, agent2_save_path, iagent1_save_path, iagent2_save_path]
         label_list = ["Agent1", "Agent2", "Iagent1", "Iagent2"]
         algo_list = [Config.agent_training_algo, Config.agent_training_algo, Config.iterative_agent_training_algo,
@@ -156,22 +159,23 @@ class BenchMarkTest(unittest.TestCase):
         db_file = 'data/SpaceInvadersNoFrameskip-v4/transitions_db/DB_SpaceInvadersNoFrameskip-v4.h5'
         eval_db_path = 'data/SpaceInvadersNoFrameskip-v4/eval_db/evalDB_SpaceInvadersNoFrameskip-v4.h5'
         eval_result_path = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/eval_result.png'
+        print_to_cfg_log("About to start making first agent")
         self.fake_agent_creation(agent1_save_path, disc1_save_path, iagent1_save_path, reward1_func_path, Config.use_db, db_file,
-                                 0, False, eval_db_path, eval_result_path, 'train')
+                                 0, True, eval_db_path, eval_result_path, 'train')
         print_to_cfg_log('finished creating first agent, starting second')
         self.fake_agent_creation(agent2_save_path, disc2_save_path, iagent2_save_path, reward2_func_path, Config.use_db, db_file,
                                  1, False, eval_db_path, eval_result_path, 'eval')
         #                                  finished pipline, creating result visualisation
-        print_to_cfg_log("FINISHED PIPELINE - MAKING GRAPHS")
-        save_dir = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/'
-        agent_list_path = [agent1_save_path, agent2_save_path, iagent1_save_path, iagent2_save_path]
-        label_list = ["Agent1", "Agent2", "Iagent1", "Iagent2"]
-        algo_list = [Config.agent_training_algo, Config.agent_training_algo, Config.iterative_agent_training_algo,
-                     Config.iterative_agent_training_algo]
-        disc_func_lst = [disc1_save_path, disc2_save_path]
-        interesting_agents = [0, 1]
-        self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents,
-                              num_chunks=100)
+        # print_to_cfg_log("FINISHED PIPELINE - MAKING GRAPHS")
+        # save_dir = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/'
+        # agent_list_path = [agent1_save_path, agent2_save_path, iagent1_save_path, iagent2_save_path]
+        # label_list = ["Agent1", "Agent2", "Iagent1", "Iagent2"]
+        # algo_list = [Config.agent_training_algo, Config.agent_training_algo, Config.iterative_agent_training_algo,
+        #              Config.iterative_agent_training_algo]
+        # disc_func_lst = [disc1_save_path, disc2_save_path]
+        # interesting_agents = [0, 1]
+        # self._analyze_results(agent_list_path, label_list, algo_list, disc_func_lst, save_dir, interesting_agents,
+        #                       num_chunks=100)
 
     def _analyze_results(self, agents_path, agents_label, algo_list, disc_function_path_list, save_dir,
                          distribution_agents_index, use_fakes=True, device='cuda:0', num_chunks=1):
@@ -189,9 +193,10 @@ class BenchMarkTest(unittest.TestCase):
                                agents_label[i] + "_agent" + agents_label[k] + ".png"
                         fake_agent_classification(agents[i], disc_func, temp_agents, temp_labels,
                                                   Config.env_action_space_size, self.venv, Config.num_transitions,
-                                                  plot_function=plot_bar_mean, agent_color='r', save_path=path,
+                                                  plot_function=plot_bar_mean, agent_color='r', expert_color='g',
+                                                  save_path=path,
                                                   print_assesement=False, device=device, num_chunks=num_chunks)
-                        print('finished creating ' + path)
+                        print_to_cfg_log('finished creating ' + path)
                         if k in distribution_agents_index:
                             temp_labels = [agents_label[i], agents_label[k], "Expert"]
                             temp_agents = [agents[i], agents[k], self.expert]
@@ -201,7 +206,7 @@ class BenchMarkTest(unittest.TestCase):
                                                       Config.env_action_space_size, self.venv, Config.num_transitions,
                                                       plot_function=plot_distribution, save_path=path,
                                                       print_assesement=False, device=device, num_chunks=num_chunks)
-                            print('finished creating ' + path)
+                            print_to_cfg_log('finished creating ' + path)
             for k in range(num_agents):
                 temp_labels = labels + [agents_label[k], "Expert"]
                 temp_agents = fakes + [agents[k], self.expert]
@@ -209,9 +214,10 @@ class BenchMarkTest(unittest.TestCase):
                        + agents_label[k] + ".png"
                 fake_agent_classification(None, disc_func, temp_agents, temp_labels,
                                           Config.env_action_space_size, self.venv, Config.num_transitions,
-                                          plot_function=plot_bar_mean, agent_color='r', save_path=path,
+                                          plot_function=plot_bar_mean, agent_color='r', expert_color='g',
+                                          save_path=path,
                                           print_assesement=False, device=device, num_chunks=num_chunks)
-                print('finished creating ' + path)
+                print_to_cfg_log('finished creating ' + path)
                 if k in distribution_agents_index:
                     temp_labels = [agents_label[k], "Expert"]
                     temp_agents = [agents[k], self.expert]
@@ -221,7 +227,7 @@ class BenchMarkTest(unittest.TestCase):
                                               Config.env_action_space_size, self.venv, Config.num_transitions,
                                               plot_function=plot_distribution, save_path=path,
                                               print_assesement=False, device=device, num_chunks=num_chunks)
-                    print('finished creating ' + path)
+                    print_to_cfg_log('finished creating ' + path)
 
     # def test_save_fig(self):
     #     disc_path = 'data/disc_functions/disc_func1'

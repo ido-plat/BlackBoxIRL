@@ -21,28 +21,22 @@ from tqdm import trange
 from src.utils.env_utils import SpaceInvadersEnv
 class BenchMarkTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.env_to_test = 'SpaceInvadersNoFrameskip-v4'
-        if Config.env_max_timestep is not np.inf:
-            finite_env_generator = SpaceInvadersEnv(self.env_to_test, Config.num_env, None, Config.env_max_timestep, True)
-            self.finite_env = finite_env_generator.make_venv()
-
-        endless_env_gen = SpaceInvadersEnv(self.env_to_test, Config.num_env, None, np.inf, True)
-        self.normal_venv = endless_env_gen.make_venv()
-        # self.expert_path = 'rl-baselines3-zoo/rl-trained-agents/dqn/SpaceInvadersNoFrameskip-v4_1/SpaceInvadersNoFrameskip-v4.zip'
-        # self.expert_algo = DQN
-        # self.expert = self.expert_algo.load(self.expert_path, self.normal_venv)
+        venv_generator = SpaceInvadersEnv(Config.env, Config.num_env, None, Config.env_max_timestep, True)
+        self.venv = venv_generator.make_venv()
+        self.expert = Config.expert_training_algo.load(Config.expert_path, self.venv,
+                                                       custom_objects=Config.expert_custom_objects)
         self.noise = None
 
 
     def get_agent_traj_len(self, n, agent):
-        traj = [rollout_stats(generate_trajectories(agent, self.normal_venv, make_min_episodes(3)))['len_mean'] for _ in trange(n)]
+        traj = [rollout_stats(generate_trajectories(agent, self.venv, make_min_episodes(3)))['len_mean'] for _ in trange(n)]
         print("done generating traj")
         return traj
 
     def test_plot_duration(self):
-        big_num = 100
-        n_bins = 10
-        lens = self.get_agent_traj_len(big_num, self.noise)
+        big_num = 1000
+        n_bins = 31
+        lens = self.get_agent_traj_len(big_num, self.expert)
         f = open('src/tests/temp/means.txt', 'w')
         print(np.array(lens).mean(), file=f)
         plt.hist(np.array(lens), n_bins)

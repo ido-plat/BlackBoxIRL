@@ -1,5 +1,6 @@
 
 import numpy as np
+import datetime
 import tables as tb
 from stable_baselines3 import DQN, A2C, PPO
 from src.alogirhms.airl import airl
@@ -7,7 +8,7 @@ from src.alogirhms.airl import airl
 
 class Config:
     # misc
-    num_transitions = int(5e4)
+    num_transitions = int(1e4)
     in_lab = True
     use_db = True
     result_img_shape = (900, 1600, 3)
@@ -28,8 +29,8 @@ class Config:
     # dbs configs
     batch_size = 1024
     maximum_batches_in_memory = 10
-    every_n_agent_eval = 8  # first run, every n-th agent would fill the eval db
-    num_transitions_per_eval = int(pow(2, 10))
+    every_n_agent_eval = 4  # first run, every n-th agent would fill the eval db
+    num_transitions_per_eval = 1000
     num_traj_disc_eval = None   # None == all
     # expert configs
     expert_path = 'data/SpaceInvadersNoFrameskip-v4/agents/SpaceInvadersNoFrameskip-v4_DQN_Expert.zip'
@@ -105,7 +106,7 @@ class Config:
     # airl configs
     irl_alo = airl
     airl_num_transitions = batch_size * 1000    # roughly int(1e7)
-    airl_iterations = 1000
+    airl_iterations = 400
     airl_model_training_steps = int(pow(2, 8))     # per grad step 2^^8
     airl_model_num_steps = int(pow(2, 16))  # num steps 2^^16
     airl_result_dir = 'data/SpaceInvadersNoFrameskip-v4/result_plots'
@@ -114,6 +115,7 @@ class Config:
         'batch_size': batch_size,
         'policy_training_steps_for_iteration': airl_model_training_steps,
         'total_timesteps': airl_iterations * airl_model_num_steps,
+        # "allow_variable_horizon": True,
         "allow_variable_horizon": env_max_timestep is np.inf,
         'disc_updates': 8,
         'iagent_args': all_model_training_args[env][iterative_agent_training_algo],
@@ -129,5 +131,5 @@ class Config:
 
 def print_to_cfg_log(msg):
     with open(Config.log_file, 'a') as f:
-        print(msg, file=f)
+        print(f'{datetime.datetime.now().strftime("%H:%M:%S")} ) {msg}', file=f)
     print(msg)

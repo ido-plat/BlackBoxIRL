@@ -11,7 +11,7 @@ from typing import (
 import gym
 import numpy as np
 
-from seals.util import AbsorbAfterDoneWrapper
+from seals.util import AbsorbAfterDoneWrapper, AutoResetWrapper
 from imitation.util.util import make_vec_env
 from gym.wrappers.time_limit import TimeLimit
 from stable_baselines3.common.vec_env import VecTransposeImage
@@ -27,15 +27,16 @@ def make_fixed_horizon_venv(
     seed: int = 0,
     parallel: bool = False,
     log_dir: Optional[str] = None,
-    post_wrappers: Optional[Sequence[Callable[[gym.Env, int], gym.Env]]] = None,
+    post_wrappers=None,
     env_make_kwargs: Optional[Mapping[str, Any]] = None,
 ):
     def f(env, i):
-        return TimeLimit(AbsorbAfterDoneWrapper(env, absorb_reward, absorb_obs), max_episode_steps)
-    if not post_wrappers:
-        post_wrappers = [f]
+        # return TimeLimit(AbsorbAfterDoneWrapper(env, absorb_reward, absorb_obs), max_episode_steps)
+        return AbsorbAfterDoneWrapper(env, absorb_reward, absorb_obs)
+    if post_wrappers:
+        post_wrappers.append(f)
     else:
-        post_wrappers = list(post_wrappers).append(f)
+        post_wrappers = [f]
     return make_vec_env(env_name, n_envs, seed, parallel, log_dir, max_episode_steps, post_wrappers, env_make_kwargs)
 
 class SpaceInvadersEnv:
@@ -53,6 +54,7 @@ class SpaceInvadersEnv:
         self.transpose = transpose
 
     def make_venv(self):
+
         venv = make_vec_env(self.env_name, n_envs=self.num_env, post_wrappers=self.wrappers) if self.max_timestemp == np.inf else \
                make_fixed_horizon_venv(self.env_name, max_episode_steps=self.max_timestemp, n_envs=self.num_env,
                                        post_wrappers=self.wrappers)

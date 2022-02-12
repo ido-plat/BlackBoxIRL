@@ -82,11 +82,14 @@ class BenchMarkTest(unittest.TestCase):
         def f(t):
             return t[12:]
         path_dir = 'data/SpaceInvadersNoFrameskip-v4/result_plots/'
-        self.db.spill_folder_to_db(path_dir, Config(), f)
+        self.db.spill_folder_to_db(path_dir, Config())
 
     def test_spill(self):
         path = '/home/user_109/PycharmProjects/BlackBoxIRL/src/tests/temp/vis/'
-        self.db.spill_images_to_folder(0, path)
+        self.db.spill_images_to_folder(1, path)
+        
+    def details(self):
+        print(f"nrows normal0 : {self.db.db.root['Database0'].nrows} normal1 : {self.db.db.root['Database1'].nrows}  Result : {self.db.db.root['Results'].nrows}")
 
 
 

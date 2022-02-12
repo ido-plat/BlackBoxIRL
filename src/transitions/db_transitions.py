@@ -37,6 +37,10 @@ class TransitionsDB(Iterable):
                  observation_dtype, action_shape, action_dtype, dones_shape, dones_dtype, result_shape,
                  result_dtype, max_num_result=100, num_databases_to_make=2, use_observation=False):
 
+        self.batch_size = batch_size
+        num_batches = int(num_transitions/self.batch_size)
+        num_batches_per_append = int(max_transition_per_run/self.batch_size)
+
         class TransitionBatch(tb.IsDescription):
             acts = action_dtype(shape=(self.batch_size,) + action_shape, pos=0)
             dones = dones_dtype(shape=(self.batch_size,) + dones_shape, pos=1)
@@ -56,15 +60,12 @@ class TransitionsDB(Iterable):
         else:
             file_exist = False
             mode = 'w'
-        self.batch_size = batch_size
-        num_batches = int(num_transitions/self.batch_size)
-        num_batches_per_append = int(max_transition_per_run/self.batch_size)
         self.db = tb.open_file(self.file_name, mode)
         self.tables = []
         for i in range(num_databases_to_make):
             if file_exist:
                 table = self.db.root[f"Database{i}"]
-                table.remove_row(0)
+                table.remove_rows(0)
             else:
                 table = self.db.create_table(self.db.root, f"Database{i}", TransitionBatch, expectedrows=num_batches)
             self._fil_table(table, num_batches, num_batches_per_append, expert, venv)
@@ -72,7 +73,7 @@ class TransitionsDB(Iterable):
             self.tables.append(table)
             self.print_func(f"Finished making table n{i}")
 
-        self.result_plots = self.db.create_table(self.db.root, "Results", Result) if not file_exist else self.db.root['Result']
+        self.result_plots = self.db.create_table(self.db.root, "Results", Result) if not file_exist else self.db.root['Results']
         self.result_shape = result_shape
         self.result_plots.attrs.image_shape = result_shape
         self.result_plots.attrs.max_images = max_num_result
