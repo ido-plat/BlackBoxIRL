@@ -21,11 +21,17 @@ class BenchMarkTest(unittest.TestCase):
         #     self.venv = make_fixed_horizon_venv(Config.env, max_episode_steps=Config.env_max_timestep, n_envs=Config.num_env)
         # else:
         #     self.venv = make_vec_env(Config.env, Config.num_env)
-        venv_generator = SpaceInvadersEnv(Config.env, Config.num_env, None, Config.env_max_timestep, True)
+        venv_generator = SpaceInvadersEnv()
         self.venv = venv_generator.make_venv()
         self.expert = Config.expert_training_algo.load(Config.expert_path, self.venv,
                                                        custom_objects=Config.expert_custom_objects)
         self.noise = None
+        other_expert_path = ['rl-baselines3-zoo/rl-trained-agents/a2c/SpaceInvadersNoFrameskip-v4_1/SpaceInvadersNoFrameskip-v4.zip',
+                             'rl-baselines3-zoo/rl-trained-agents/ppo/SpaceInvadersNoFrameskip-v4_1/SpaceInvadersNoFrameskip-v4.zip',
+                             'rl-baselines3-zoo/rl-trained-agents/qrdqn/SpaceInvadersNoFrameskip-v4_1/SpaceInvadersNoFrameskip-v4.zip'
+                             ]
+        other_expert_algo = [A2C, PPO, QRDQN]
+        self.other_experts = [a.load(b) for a, b in zip(other_expert_algo, other_expert_path)]
 
     def test_reward_hist(self):
         config = Config
@@ -36,18 +42,19 @@ class BenchMarkTest(unittest.TestCase):
                                                      xlim=(-5, 5))
 
     def test_agent_footage(self):
-        gif_path = 'src/tests/temp/pend_gif2.gif'
-        config = Config
+        gif_path = 'src/tests/temp/space.gif'
         agent_path = 'src/tests/temp/real_reward_agent.zip'
-        agent_training_alg = config.agent_training_algo
-        agent = agent_training_alg.load(agent_path, self.venv)
-        obs, act, next_obs, done, rewards = generate_trajectory_footage(agent, self.venv, gif_path, subsampling=False)
+        # agent_training_alg = config.agent_training_algo
+        # agent = agent_training_alg.load(agent_path, self.venv)
+
+        obs, act, next_obs, done, rewards = generate_trajectory_footage(self.expert, self.venv, gif_path, subsampling=False)
+        print(len(done))
         # plt.hist(act)
         # plt.show()
 
     def fake_agent_creation(self, save_agent_path, save_disc_func_path, save_iterated_agent_path, save_reward_function,
                             use_db, db_filename='', index=0, rewrite_db_file=False, eval_db_path='', eval_result_path='',
-                            mode=''):
+                            mode='', other_experts=()):
         config = Config
         agent_training_alg = config.agent_training_algo
         airl_arg = config.airl_args.copy()
@@ -61,7 +68,8 @@ class BenchMarkTest(unittest.TestCase):
         print_to_cfg_log('generated samples')
         db = None
         if eval_db_path:
-            db = make_eval_db_from_config(eval_db_path, eval_result_path, self.expert, self.venv, mode)
+            db = make_eval_db_from_config(eval_db_path, eval_result_path, self.expert, self.venv, mode,
+                                          other_expert=other_experts)
             print_to_cfg_log('Made eval DB')
         train_agent_learnt_reward(samples, self.venv, agent_training_alg,
                                   learning_time_step=config.model_total_training_steps,
@@ -161,10 +169,10 @@ class BenchMarkTest(unittest.TestCase):
         eval_result_path = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/eval_result.png'
         print_to_cfg_log("About to start making first agent")
         self.fake_agent_creation(agent1_save_path, disc1_save_path, iagent1_save_path, reward1_func_path, Config.use_db, db_file,
-                                 0, True, eval_db_path, eval_result_path, 'train')
+                                 0, True, eval_db_path, eval_result_path, 'train', other_experts=self.other_experts)
         print_to_cfg_log('finished creating first agent, starting second')
         self.fake_agent_creation(agent2_save_path, disc2_save_path, iagent2_save_path, reward2_func_path, Config.use_db, db_file,
-                                 1, False, eval_db_path, eval_result_path, 'eval')
+                                 1, False, eval_db_path, eval_result_path, 'eval', other_experts=self.other_experts)
         #                                  finished pipline, creating result visualisation
         # print_to_cfg_log("FINISHED PIPELINE - MAKING GRAPHS")
         # save_dir = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/'

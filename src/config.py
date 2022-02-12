@@ -26,12 +26,16 @@ class Config:
     env_act_dtype = tb.Int64Col
     env_dones_dtype = tb.BoolCol
     use_obs = False
-    # dbs configs
+    # transition db configs
     batch_size = 1024
     maximum_batches_in_memory = 10
+    # eval db config
     every_n_agent_eval = 4  # first run, every n-th agent would fill the eval db
     num_transitions_per_eval = 1000
     num_traj_disc_eval = None   # None == all
+    num_traj_other_expert = 50
+    num_traj_reward_func = 10
+    do_reward_func_eval = (num_traj_reward_func == 0)
     # expert configs
     expert_path = 'data/SpaceInvadersNoFrameskip-v4/agents/SpaceInvadersNoFrameskip-v4_DQN_Expert.zip'
     expert_training_algo = DQN
