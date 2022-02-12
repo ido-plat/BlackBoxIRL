@@ -6,6 +6,7 @@ import unittest
 from stable_baselines3 import DQN, A2C, PPO
 from imitation.algorithms.density import DensityType
 from src.alogirhms.airl import *
+from sb3_contrib import QRDQN
 from src.utils.agent_utils import generate_trajectory_footage
 from src.utils.env_utils import SpaceInvadersEnv
 from src.config import Config, print_to_cfg_log
@@ -26,12 +27,13 @@ class BenchMarkTest(unittest.TestCase):
         self.expert = Config.expert_training_algo.load(Config.expert_path, self.venv,
                                                        custom_objects=Config.expert_custom_objects)
         self.noise = None
-        other_expert_path = ['rl-baselines3-zoo/rl-trained-agents/a2c/SpaceInvadersNoFrameskip-v4_1/SpaceInvadersNoFrameskip-v4.zip',
-                             'rl-baselines3-zoo/rl-trained-agents/ppo/SpaceInvadersNoFrameskip-v4_1/SpaceInvadersNoFrameskip-v4.zip',
-                             'rl-baselines3-zoo/rl-trained-agents/qrdqn/SpaceInvadersNoFrameskip-v4_1/SpaceInvadersNoFrameskip-v4.zip'
+        other_expert_path = ['data/SpaceInvadersNoFrameskip-v4/agents/other_experts/SpaceInvadersNoFrameskip-v4_A2C.zip',
+                             'data/SpaceInvadersNoFrameskip-v4/agents/other_experts/SpaceInvadersNoFrameskip-v4_PPO.zip',
+                             'data/SpaceInvadersNoFrameskip-v4/agents/other_experts/SpaceInvadersNoFrameskip-v4_QRDQN.zip'
                              ]
         other_expert_algo = [A2C, PPO, QRDQN]
-        self.other_experts = [a.load(b) for a, b in zip(other_expert_algo, other_expert_path)]
+        self.other_experts = [a.load(b, custom_objects=Config.expert_custom_objects)
+                              for a, b in zip(other_expert_algo, other_expert_path)]
 
     def test_reward_hist(self):
         config = Config

@@ -160,8 +160,9 @@ class EvalDB:
         for i in indx:
             relevent_row = self.expert_table[i]
             true_reward = relevent_row['rewards']
-            fake_reward = reward_func(torchify(relevent_row['obs'], th.float),
-                                      relevent_row['acts'], torchify(relevent_row['next_obs'], th.float))
+            with th.no_grad():
+                fake_reward = reward_func(torchify(relevent_row['obs'], th.float),
+                                          relevent_row['acts'], torchify(relevent_row['next_obs'], th.float))
             acc += (true_reward == fake_reward).mean()
         acc = acc / len(indx)
         self.reward_acc.append(acc)
