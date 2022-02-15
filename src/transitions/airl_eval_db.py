@@ -70,18 +70,24 @@ class EvalDB:
             self.expert_table = self.db.root['Expert_transitions']
 
     def activate(self, disc, gen_algo, reward_func, round_number):
+        timing_dict = {}
         if self.do_reward_eval:
-            self.eval_reward_func_acc(reward_func)
+            timing_dict['reward function acc'] = self.eval_reward_func_acc(reward_func)
         if len(self.other_expert) > 0:
-            self.eval_against_other_expert(disc, gen_algo)
+            timing_dict['other expert acc'] = self.eval_against_other_expert(disc, gen_algo)
         if self.mode == 'train':
             if round_number % self.every_n_agent_make_traj == 0:
                 self.fill_row(gen_algo)
         else:
-            self.eval_disc(disc, gen_algo)
-        self.log()
+            timing_dict['iterative agent acc'] = self.eval_disc(disc, gen_algo)
+        self.log(timing_dict)
 
-    def log(self):
+    def log(self, timings):
+        def format_time_delta(time_delta):
+            hours, remainder = divmod(time_delta.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            return'{:02}:{:02}:{:02}'.format(int(hours), int(minutes), int(seconds))
+            # result: 03:43:40
         curr_iter = len(self.result_timing) + 1
         now = datetime.datetime.now()
         time_diff = "?" if curr_iter == 1 else (now-self.result_timing[-1])
@@ -89,13 +95,16 @@ class EvalDB:
             (now + datetime.timedelta(seconds=((self.num_iter - curr_iter) * time_diff.seconds))).strftime('%d/%m, %H:%M:%S')
         self.result_timing.append(now)
         with open(self.log_file, 'a') as f:
-            f.write(f"{curr_iter}) Took {time_diff} seconds, finished at {now.strftime('%d/%m, %H:%M:%S')} And should finish the entire run at {total_time_left}")
+            f.write(f"{curr_iter}) Took {time_diff} seconds, finished at {now.strftime('%d/%m, %H:%M:%S')} And should finish the entire run at {total_time_left}\n")
             if len(self.other_expert) > 0:
                 f.write(" Curr other expert acc is %.4f" % self.diff_expert_acc[-1])
             if self.do_reward_eval:
                 f.write(" Curr reward func acc is is %.4f" % self.reward_acc[-1])
             if self.mode != "train":
                 f.write(" Curr iterative agent acc is %.4f" % self.results[-1])
+            f.write('\ntimings: ')
+            for key, val in timings.items():
+                f.write(f'{key} took {format_time_delta(val)} ')
             f.write('\n')
 
     def _create_transition_batch(self, agent, use_rewards):
@@ -172,6 +181,7 @@ class EvalDB:
         return acc
 
     def eval_against_other_expert(self, disc, gen_algo):
+        start = datetime.datetime.now()
         def row_to_confidence(row, obs=None, acts=None, next_obs=None, dones=None):
             obs = obs if obs is not None else row['obs']
             obs = torchify(obs, th.float)
@@ -206,7 +216,7 @@ class EvalDB:
         self.diff_expert_acc.append(result)
         with open(f"{self.log_dir}/other_expert_disc_eval.txt", "a") as f:
             print(f"{result} ", file=f)
-        return result
+        return datetime.datetime.now() - start
 
     def close(self):
         files = [f"{self.log_dir}/other_expert_disc_eval.txt", f"{self.log_dir}/reward_func_acc.txt",
