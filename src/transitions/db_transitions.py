@@ -64,10 +64,10 @@ class TransitionsDB(Iterable):
         self.tables = []
         for i in range(num_databases_to_make):
             if file_exist:
-                table = self.db.root[f"Database{i}"]
-                table.remove_rows(0)
-            else:
-                table = self.db.create_table(self.db.root, f"Database{i}", TransitionBatch, expectedrows=num_batches)
+                # table = self.db.root[f"Database{i}"]
+                # table.remove_rows(0)
+                self.db.remove_node(self.db.root, f"Database{i}")
+            table = self.db.create_table(self.db.root, f"Database{i}", TransitionBatch, expectedrows=num_batches)
             self._fil_table(table, num_batches, num_batches_per_append, expert, venv)
             table.attrs.batch_size = self.batch_size
             self.tables.append(table)

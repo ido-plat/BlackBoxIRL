@@ -50,7 +50,7 @@ class EvalDB:
         class TransitionBatchWithReward(tb.IsDescription):
             acts = action_dtype(shape=(self.batch_size,) + action_shape, pos=0)
             dones = dones_dtype(shape=(self.batch_size,) + dones_shape, pos=1)
-            rewards = action_dtype(shape=(self.batch_size,) + action_dtype, pos=2)
+            rewards = action_dtype(shape=(self.batch_size,) + action_shape, pos=2)
             obs = observation_dtype(shape=(self.batch_size,) + observation_shape, pos=3)
             next_obs = observation_dtype(shape=(self.batch_size,) + observation_shape, pos=4)
 
@@ -159,10 +159,11 @@ class EvalDB:
         acc = 0
         for i in indx:
             relevent_row = self.expert_table[i]
-            true_reward = relevent_row['rewards']
+            true_reward = np.array(relevent_row['rewards'])
             with th.no_grad():
                 fake_reward = reward_func(torchify(relevent_row['obs'], th.float),
-                                          relevent_row['acts'], torchify(relevent_row['next_obs'], th.float))
+                                          relevent_row['acts'], torchify(relevent_row['next_obs'], th.float),
+                                          torchify(relevent_row['dones'])).cpu().detach().numpy()
             acc += (true_reward == fake_reward).mean()
         acc = acc / len(indx)
         self.reward_acc.append(acc)
@@ -208,11 +209,17 @@ class EvalDB:
         return result
 
     def close(self):
+        files = [f"{self.log_dir}/other_expert_disc_eval.txt", f"{self.log_dir}/reward_func_acc.txt",
+                 f"{self.log_dir}/iterative_agent_disc_eval.txt"]
+        for path in files:
+            with open(path, "a") as f:
+                f.write("\n--------\n")
         self.db.close()
 
 
 def torchify(x, type=None):
-    return th.as_tensor(x, device=th.device('cuda:0'), dtype=type)
+    tensor = th.from_numpy(x) if isinstance(x, np.ndarray) else x
+    return tensor.to(device=th.device('cuda'), dtype=type)
 
 
 def make_eval_db_from_config(path, result_plot_path, expert, venv, mode, other_expert):

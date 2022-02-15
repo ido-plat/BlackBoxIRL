@@ -98,9 +98,11 @@ class UnifiedResnet(nn.Module):
         input_mlp = 0
 
         def make_resnet():
-            net = models.resnet18(False)
-            net.conv1 = nn.Conv2d(input_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
-            net.fc = nn.Linear(512, hid_dim)
+            # net = models.resnet18(False)
+            # net.conv1 = nn.Conv2d(input_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+            # net.fc = nn.Linear(512, hid_dim)
+            net = SimpleNet(input_channels, hid_dim)
+            # net = nn.DataParallel(net, device_ids=[0, 1])
             return net
 
         if use_state:
@@ -131,3 +133,23 @@ class UnifiedResnet(nn.Module):
             inputs.append(self.next_state_net(next_state))
         return self.final_net(th.cat(inputs, dim=1))
 
+class SimpleNet(nn.Module): # based on https://link.springer.com/article/10.1007/s42452-019-1903-4
+    def __init__(self, input_channels=4, hid_dim=32, ):
+        super().__init__()
+        self.conv1 = nn.Conv2d(input_channels, 32, kernel_size=(3, 3), stride=(1, 1))
+        self.bnrelu1 = nn.Sequential(nn.ReLU(), nn.BatchNorm2d(32))
+        self.pool1 = nn.MaxPool2d((2, 2))
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=(3, 3), stride=(2, 2))
+        self.bnrelu2 = nn.Sequential(nn.ReLU(), nn.BatchNorm2d(64))
+        self.pool2 = nn.MaxPool2d((2, 2))
+        self.fc = nn.Linear(6400, hid_dim)
+
+    def forward(self, out: th.Tensor):
+        out = self.conv1(out)
+        out = self.bnrelu1(out)
+        out = self.pool1(out)
+        out = self.conv2(out)
+        out = self.bnrelu2(out)
+        out = self.pool2(out)
+        out = self.fc(th.reshape(out, (out.size()[0], -1)))
+        return out

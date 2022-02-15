@@ -4,7 +4,7 @@ import datetime
 import tables as tb
 from stable_baselines3 import DQN, A2C, PPO
 from src.alogirhms.airl import airl
-
+from src.networks.reward_nets import ClassificationShapedRewardNet
 
 class Config:
     # misc
@@ -13,7 +13,7 @@ class Config:
     use_db = True
     result_img_shape = (900, 1600, 3)
     result_img_dtype = tb.UInt8Col
-    log_file = 'out.txt'
+    log_file = 'run_logs/out.txt'
     # env configs
     env = 'SpaceInvadersNoFrameskip-v4'
     env_action_space_size = 6
@@ -27,15 +27,15 @@ class Config:
     env_dones_dtype = tb.BoolCol
     use_obs = False
     # transition db configs
-    batch_size = 1024
-    maximum_batches_in_memory = 10
+    batch_size = 512
+    maximum_batches_in_memory = 20
     # eval db config
     every_n_agent_eval = 4  # first run, every n-th agent would fill the eval db
     num_transitions_per_eval = 1000
     num_traj_disc_eval = None   # None == all
     num_traj_other_expert = 50
     num_traj_reward_func = 10
-    do_reward_func_eval = (num_traj_reward_func == 0)
+    do_reward_func_eval = (num_traj_reward_func != 0)
     # expert configs
     expert_path = 'data/SpaceInvadersNoFrameskip-v4/agents/SpaceInvadersNoFrameskip-v4_DQN_Expert.zip'
     expert_training_algo = DQN
@@ -109,7 +109,7 @@ class Config:
 
     # airl configs
     irl_alo = airl
-    airl_num_transitions = batch_size * 1000    # roughly int(1e7)
+    airl_num_transitions = batch_size * 2000    # roughly int(1e7)
     airl_iterations = 400
     airl_model_training_steps = int(pow(2, 8))     # per grad step 2^^8
     airl_model_num_steps = int(pow(2, 16))  # num steps 2^^16

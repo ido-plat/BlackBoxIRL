@@ -1,8 +1,12 @@
+import matplotlib.pyplot as plt
+
 from src.banchmarking.reward_aprox_banchmarking import *
 from src.banchmarking.agent_creation_banchmarking import *
 from src.alogirhms.density_approximate import density_aprox
 from imitation.util import util
 import unittest
+import os
+from sb3_contrib import QRDQN
 from stable_baselines3 import DQN, A2C, PPO
 from imitation.algorithms.density import DensityType
 from src.alogirhms.airl import *
@@ -22,7 +26,7 @@ class BenchMarkTest(unittest.TestCase):
         #     self.venv = make_fixed_horizon_venv(Config.env, max_episode_steps=Config.env_max_timestep, n_envs=Config.num_env)
         # else:
         #     self.venv = make_vec_env(Config.env, Config.num_env)
-        venv_generator = SpaceInvadersEnv()
+        venv_generator = SpaceInvadersEnv(max_timestemp=Config.env_max_timestep)
         self.venv = venv_generator.make_venv()
         self.expert = Config.expert_training_algo.load(Config.expert_path, self.venv,
                                                        custom_objects=Config.expert_custom_objects)
@@ -34,6 +38,12 @@ class BenchMarkTest(unittest.TestCase):
         other_expert_algo = [A2C, PPO, QRDQN]
         self.other_experts = [a.load(b, custom_objects=Config.expert_custom_objects)
                               for a, b in zip(other_expert_algo, other_expert_path)]
+        self.other_experts_labels = ['A2C', 'PPO', "QRDQN"]
+        self.reward_net = ClassificationShapedRewardNet(
+            observation_space=self.venv.observation_space,
+            action_space=self.venv.action_space,
+            n_classes=2
+        )
 
     def test_reward_hist(self):
         config = Config
@@ -63,6 +73,7 @@ class BenchMarkTest(unittest.TestCase):
         airl_arg['save_disc_path'] = save_disc_func_path
         airl_arg['save_reward_func_path'] = save_reward_function
         airl_arg['save_iagent_path'] = save_iterated_agent_path
+        airl_arg['reward_net'] = self.reward_net
         print_to_cfg_log('starting to generate samples')
         samples = make_db_using_config(db_filename, index, rewrite_db_file, self.expert, self.venv) if use_db else \
                   flatten_trajectories_with_rew(generate_trajectories(self.expert, self.venv, make_min_timesteps(config.airl_num_transitions)))
@@ -91,16 +102,17 @@ class BenchMarkTest(unittest.TestCase):
         iagent1_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent1.zip'
         iagent2_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent2.zip'
         expert_path = 'data/SpaceInvadersNoFrameskip-v4/agents/SpaceInvadersNoFrameskip-v4_DQN_Expert.zip'
-        agent = Config.agent_training_algo.load(agent_path, self.venv, custom_objects=Config.expert_custom_objects)
-        agent2 = Config.agent_training_algo.load(agent2_path, self.venv, custom_objects=Config.expert_custom_objects)
+        # agent = Config.agent_training_algo.load(agent_path, self.venv, custom_objects=Config.expert_custom_objects)
+        # agent2 = Config.agent_training_algo.load(agent2_path, self.venv, custom_objects=Config.expert_custom_objects)
         expert = Config.expert_training_algo.load(expert_path, self.venv, custom_objects=Config.expert_custom_objects)
-        iagent = Config.iterative_agent_training_algo.load(iagent1_path, self.venv,
-                                                           custom_objects=Config.expert_custom_objects)
-        iagent2 = Config.iterative_agent_training_algo.load(iagent2_path, self.venv,
-                                                           custom_objects=Config.expert_custom_objects)
-        agents = [expert, self.noise, agent, agent2, iagent, iagent2]
-        labels = ["expert", "noise", "Agent 1", 'Agent 2', 'Iagent 1', "Iagent 2"]
-        f = open('src/tests/temp/rewards.txt', 'w')
+        # iagent = Config.iterative_agent_training_algo.load(iagent1_path, self.venv,
+        #                                                    custom_objects=Config.expert_custom_objects)
+        # iagent2 = Config.iterative_agent_training_algo.load(iagent2_path, self.venv,
+        #                                                    custom_objects=Config.expert_custom_objects)
+        # agents = [expert, self.noise, agent, agent2, iagent, iagent2]
+        # labels = ["expert", "noise", "Agent 1", 'Agent 2', 'Iagent 1', "Iagent 2"]
+        agents, labels = [expert] + self.other_experts, ["Expert"] + self.other_experts_labels
+        f = open(f'{os.path.dirname(Config.log_file)}/rewards.txt', 'w')
         for a, l in zip(agents, labels):
             reward = get_agent_avg_reward(a, self.venv, Config.num_transitions)
             print(l + ' mean reward ' + str(reward))
@@ -122,21 +134,22 @@ class BenchMarkTest(unittest.TestCase):
         generate_trajectory_footage(agent, self.venv, gif_path)
 
     def test_single_classification(self):
-        agent_path = 'data/SpaceInvadersNoFrameskip-v4/iagents/SpaceInvaders-v4_iterative_agent1'
+        print_to_cfg_log('Starting test classification')
+        agent_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent2'
         disc_path = 'data/SpaceInvadersNoFrameskip-v4/disc_functions/disc_func1'
-        reference_agent_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent2'
-        save_path = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/res2.png'
+        reference_agent_path = 'data/SpaceInvadersNoFrameskip-v4/agents/our_agents/SpaceInvaders-v4_agent1'
+        save_path = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/res3.png'
         agent_label = 'Agent 1'
         num_chunks = 100
-        ref_agent = Config.iterative_agent_training_algo.load(agent_path)
-        agent = Config.agent_training_algo.load(reference_agent_path)
+        agent = Config.agent_training_algo.load(agent_path)
+        ref_agent = Config.agent_training_algo.load(reference_agent_path)
         disc_func = load_disc_func(disc_path)
-        fakes, labels = generate_fake_list()
+        fakes, labels = self.other_experts, self.other_experts_labels
         fakes += [agent, self.expert]
         labels += [agent_label, "Expert"]
         fake_agent_classification(ref_agent, disc_func, fakes, labels,
                                   Config.env_action_space_size, self.venv, Config.num_transitions,
-                                  plot_function=plot_bar_mean, save_path=save_path, device='cuda:0', out_file='out.txt',
+                                  plot_function=plot_bar_mean, save_path=save_path, device='cuda', out_file='out.txt',
                                   print_assesement=True, agent_color='r', expert_color='g', num_chunks=num_chunks)
 
     def test_partial_pipeline(self):
@@ -171,7 +184,7 @@ class BenchMarkTest(unittest.TestCase):
         eval_result_path = '/home/user_109/PycharmProjects/BlackBoxIRL/data/SpaceInvadersNoFrameskip-v4/result_plots/eval_result.png'
         print_to_cfg_log("About to start making first agent")
         self.fake_agent_creation(agent1_save_path, disc1_save_path, iagent1_save_path, reward1_func_path, Config.use_db, db_file,
-                                 0, True, eval_db_path, eval_result_path, 'train', other_experts=self.other_experts)
+                                 0, False, eval_db_path, eval_result_path, 'train', other_experts=self.other_experts)
         print_to_cfg_log('finished creating first agent, starting second')
         self.fake_agent_creation(agent2_save_path, disc2_save_path, iagent2_save_path, reward2_func_path, Config.use_db, db_file,
                                  1, False, eval_db_path, eval_result_path, 'eval', other_experts=self.other_experts)
@@ -188,7 +201,7 @@ class BenchMarkTest(unittest.TestCase):
         #                       num_chunks=100)
 
     def _analyze_results(self, agents_path, agents_label, algo_list, disc_function_path_list, save_dir,
-                         distribution_agents_index, use_fakes=True, device='cuda:0', num_chunks=1):
+                         distribution_agents_index, use_fakes=True, device='cuda', num_chunks=1):
         num_agents = len(agents_path)
         agents = [algo_list[i].load(agents_path[i]) for i in range(num_agents)]
         for n_disc, disc_function_path in enumerate(disc_function_path_list):
@@ -251,6 +264,21 @@ class BenchMarkTest(unittest.TestCase):
     #                               plot_function=plot_distribution, save_path=path,
     #                               print_assesement=False)
 
+    def test_make_plots(self, run_indx=0):
+        files = ['run_logs/other_expert_disc_eval.txt', 'run_logs/reward_func_acc.txt']
+        labels = ['other expert acc', 'reward function acc']
+        for i, path in enumerate(files):
+            with open(path) as f:
+                lines = f.readlines()
+                index = [ind for ind, ele in enumerate(lines) if ele.startswith('-')]
+                index = index[0] if len(index) > 0 else 10000
+                if run_indx == 0:
+                    data = [float(item.strip()) for item in lines[:index]]
+                else:
+                    data = [float(item.strip()) for item in lines[index+1:]]
+                plt.plot(data, label=labels[i])
+        plt.legend()
+        plt.show()
 
 if __name__ == '__main__':
     t = BenchMarkTest()

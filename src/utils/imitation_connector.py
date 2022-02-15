@@ -11,7 +11,7 @@ def to_im_traj(arr):
     return TrajectoryAccumulator().add_steps_and_auto_finish(arr[0], arr[1], arr[2], arr[3], [])
 
 
-def discriminator_conversion(disc, agent, action_space_size, def_device='cuda:0'):
+def discriminator_conversion(disc, agent, action_space_size, def_device='cuda'):
     def f(states, actions, next_states, done) -> Union[th.Tensor, np.ndarray]:
         was_np = isinstance(states, np.ndarray)
         if was_np:
@@ -31,7 +31,7 @@ def discriminator_conversion(disc, agent, action_space_size, def_device='cuda:0'
     return f
 
 
-def log_prob_calc(states, actions, agent, action_space_size, def_device='cuda:0'):
+def log_prob_calc(states, actions, agent, action_space_size, def_device='cuda'):
     if not agent:   # setting point to uniform
         return np.log(1/action_space_size)
     if isinstance(agent.policy, ActorCriticPolicy):

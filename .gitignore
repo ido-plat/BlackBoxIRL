@@ -128,3 +128,4 @@ dmypy.json
 /imitation/
 /data/SpaceInvadersNoFrameskip-v4/transitions_db/
 /data/SpaceInvadersNoFrameskip-v4/eval_db/
+/out.txt

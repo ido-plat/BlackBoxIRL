@@ -8,6 +8,7 @@ from typing import Sequence, List
 from src.utils.agent_utils import generate_trajectory_footage
 from stable_baselines3.common.callbacks import StopTrainingOnRewardThreshold, EvalCallback
 from math import ceil
+from src.config import print_to_cfg_log
 import gc
 
 
@@ -28,10 +29,7 @@ def fake_agent_classification(agent, disc_func, agents_to_asses: Sequence, label
         confidences.append(np.concatenate(confidences_in_chunks))
         if print_assesement:
             st = 'finished assessing ' + str(labels[i]) + ' - avg confidence: ' + str(confidences[i].mean())
-            print(st)
-            if out_file:
-              with open(out_file, 'a') as f:
-                print(st, file=f)
+            print_to_cfg_log(st)
     if not show:
         return confidences
     if not plot_function:
@@ -40,7 +38,7 @@ def fake_agent_classification(agent, disc_func, agents_to_asses: Sequence, label
     return confidences
 
 
-def traj_confidence(samples: Transitions, disc_func, agent, action_space_size, device='cuda:0'):
+def traj_confidence(samples: Transitions, disc_func, agent, action_space_size, device='cuda'):
     discriminator = discriminator_conversion(disc_func, agent, action_space_size, device)
     confidence = discriminator(samples.obs, samples.acts, samples.next_obs, samples.dones)
     return confidence

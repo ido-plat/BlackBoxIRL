@@ -3,6 +3,7 @@ import torch as th
 from src.utils.imitation_connector import to_im_traj
 from imitation.algorithms.adversarial import airl as im_airl
 from imitation.data import rollout, types
+from src.networks.reward_nets import ClassificationShapedRewardNet
 import stable_baselines3 as sb3
 from imitation.rewards.reward_nets import BasicShapedRewardNet
 
@@ -19,6 +20,7 @@ def airl(samples, venv, policy_training_steps_for_iteration, total_timesteps, ia
             observation_space=venv.observation_space,
             action_space=venv.action_space,
         )
+
     airl_trainer = im_airl.AIRL(
         venv=venv, reward_net=reward_net,
         demonstrations=samples,
@@ -41,12 +43,12 @@ def airl(samples, venv, policy_training_steps_for_iteration, total_timesteps, ia
     return airl_trainer._reward_net.base.predict
 
 
-def load_reward_net(path, device='cuda:0'):
+def load_reward_net(path, device='cuda'):
     net = th.load(path).to(device)
     return net.predict
 
 
-def load_disc_func(path, device='cuda:0'):
+def load_disc_func(path, device='cuda'):
     net = th.load(path).to(device)
 
     def f(state, action, next_state, done, log_policy_act_prob):
