@@ -32,31 +32,6 @@ class BenchMarkTest(unittest.TestCase):
         if self.use_db or close:
             self.db.close()
 
-
-    # def test_make_db(self):
-        # shape = (100, )
-        #
-        # class BaseM(tb.IsDescription):
-        #     zero = tb.Float32Col(shape=shape)
-        #     # ones = tb.Float32Col(shape=shape)
-        #
-        # table = self.db.create_table(self.db.root, "table", description=BaseM)
-        #
-        # zeroes = np.zeros(shape, dtype=np.float)
-        # ones = np.ones(shape, dtype=np.float)
-        # table.append([(zeroes,), (ones,), (ones*2,), (ones*3,)])
-        # for t in table:
-        #     print(t['zero'].mean())
-        # self.db = TransitionsDB(Config.batch_size, Config.airl_num_transitions,
-        #                         Config.maximum_batches_in_memory * Config.batch_size,
-        #                         self.file_name, self.venv, self.expert, Config.env_obs_shape,
-        #                         Config.env_obs_dtype, Config.env_action_shape, Config.env_act_dtype,
-        #                         Config.env_dones_shape, Config.env_dones_dtype, True)
-        #
-        # for i, item in enumerate(self.db):
-        #     print(f"{i} has shape of {len(item['obs'])}")
-        # self.db.close()
-
     def test_merge(self):
         db1 = 'data/SpaceInvadersNoFrameskip-v4/transitions_db/DB1_SpaceInvadersNoFrameskip-v4.h5'
         db2 = 'data/SpaceInvadersNoFrameskip-v4/transitions_db/DB2_SpaceInvadersNoFrameskip-v4.h5'
